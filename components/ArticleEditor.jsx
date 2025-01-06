@@ -12,12 +12,13 @@ const ArticleEditor = () => {
   const handleEditorChange = (newContent) => {
     setContent(newContent);
   };
+  const apiKey = process.env.NEXT_PUBLIC_TINYMCE_API_KEY || '7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c';
 
   return (
     <div className="p-4 border rounded-md bg-white shadow-md">
       
       <Editor
-        apiKey="7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c"
+        apiKey={apiKey}
         value={content}
         onEditorChange={handleEditorChange}
         init={{
