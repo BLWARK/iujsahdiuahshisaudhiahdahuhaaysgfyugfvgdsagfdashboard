@@ -36,7 +36,7 @@ export default function LoginForm() {
     if (user) {
       console.log("Login Successful:", user);
       localStorage.setItem(
-        "user",
+        "currentUser",
         JSON.stringify({
           id: user.id,
           name: user.name,

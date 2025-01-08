@@ -34,10 +34,8 @@ const TambahArtikel = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Post Management</h1>
-
       {/* Grid untuk Judul, Markdown Editor, dan Thumbnail */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start ">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* Kolom Kiri: Judul Artikel & Markdown Editor */}
         <div className="md:col-span-2 space-y-4">
           {/* Judul Artikel */}
@@ -83,8 +81,8 @@ const TambahArtikel = () => {
               )}
             </div>
 
-               {/* Informasi Gambar */}
-               <div className="space-y-2">
+            {/* Informasi Gambar */}
+            <div className="space-y-2">
               <div>
                 <label className="block font-medium">Alt Text:</label>
                 <input
@@ -129,6 +127,38 @@ const TambahArtikel = () => {
         </div>
       </div>
 
+
+
+      {/* Slug SEO */}
+      <div>
+         {/* Pilih Kategori */}
+      <div className="py-6">
+        <h3 className="text-lg font-medium mb-2">Kategori:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {categories.map((category) => (
+            <label key={category} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                value={category}
+                checked={selectedCategories.includes(category)}
+                onChange={() => handleCategoryChange(category)}
+                className="w-4 h-4"
+              />
+              {category}
+            </label>
+          ))}
+        </div>
+      </div>
+        <label className="block mb-2 font-medium">Slug SEO:</label>
+        <input
+          type="text"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="e.g., judul-artikel-seo"
+          className="w-full p-2 border rounded-md"
+        />
+      </div>
+
       {/* Meta Data */}
       <div>
         <label className="block mb-2 font-medium">
@@ -160,24 +190,7 @@ const TambahArtikel = () => {
         />
       </div>
 
-      {/* Pilih Kategori */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Kategori:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.map((category) => (
-            <label key={category} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                value={category}
-                checked={selectedCategories.includes(category)}
-                onChange={() => handleCategoryChange(category)}
-                className="w-4 h-4"
-              />
-              {category}
-            </label>
-          ))}
-        </div>
-      </div>
+     
 
       {/* Tag */}
       <div>
@@ -189,12 +202,11 @@ const TambahArtikel = () => {
           placeholder="e.g., Bitcoin, Crypto News, Technology"
           className="w-full p-2 border rounded-md"
         />
-        <p className="text-sm text-gray-500 mt-1">Pisahkan setiap tag dengan koma.</p>
       </div>
 
       {/* Tombol Simpan */}
       <div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-md w">
+        <button className="bg-blue-600 text-white px-4 py-2 mt-4 rounded-md w-[20%]">
           Save Article
         </button>
       </div>

@@ -1,0 +1,23 @@
+export const recycleBinArticles = [
+    { id: 1, title: "Deleted Crypto Trends 2024", category: "Crypto News", author: "Logan", date: "2024-06-01" },
+    { id: 2, title: "Business Innovations 2024", category: "Business", author: "Rhonald Bastian", date: "2024-06-02" },
+    { id: 3, title: "Tech Gadgets That Failed", category: "Technology", author: "Logan", date: "2024-06-03" },
+    { id: 4, title: "NFT Art Collection Update", category: "NFT", author: "Rhonald Bastian", date: "2024-06-04" },
+    { id: 5, title: "Crypto News Weekly Recap", category: "Crypto News", author: "Logan", date: "2024-06-05" },
+    { id: 6, title: "Top 10 Business Failures", category: "Business", author: "Rhonald Bastian", date: "2024-06-06" },
+    { id: 7, title: "AI Breakthroughs in 2024", category: "Technology", author: "Logan", date: "2024-06-07" },
+    { id: 8, title: "How NFTs Changed Gaming", category: "NFT", author: "Rhonald Bastian", date: "2024-06-08" },
+    { id: 9, title: "Blockchain for Beginners", category: "Crypto News", author: "Logan", date: "2024-06-09" },
+    { id: 10, title: "Global Business Report", category: "Business", author: "Rhonald Bastian", date: "2024-06-10" },
+    { id: 11, title: "Cloud Computing Trends", category: "Technology", author: "Logan", date: "2024-06-11" },
+    { id: 12, title: "NFT Market Predictions", category: "NFT", author: "Rhonald Bastian", date: "2024-06-12" },
+    { id: 13, title: "Crypto Investment Guide", category: "Crypto News", author: "Logan", date: "2024-06-13" },
+    { id: 14, title: "Startup Failures Analysis", category: "Business", author: "Rhonald Bastian", date: "2024-06-14" },
+    { id: 15, title: "Top AI Innovations", category: "Technology", author: "Logan", date: "2024-06-15" },
+    { id: 16, title: "Digital Art in NFT Space", category: "NFT", author: "Rhonald Bastian", date: "2024-06-16" },
+    { id: 17, title: "Ethereum Upgrades Explained", category: "Crypto News", author: "Logan", date: "2024-06-17" },
+    { id: 18, title: "Future of Global Markets", category: "Business", author: "Rhonald Bastian", date: "2024-06-18" },
+    { id: 19, title: "Cybersecurity Challenges", category: "Technology", author: "Logan", date: "2024-06-19" },
+    { id: 20, title: "NFT Gaming Revolution", category: "NFT", author: "Rhonald Bastian", date: "2024-06-20" },
+  ];
+  

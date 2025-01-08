@@ -20,7 +20,7 @@ const DashboardPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = localStorage.getItem("currentUser");
 
     if (userData) {
       try {
@@ -78,8 +78,8 @@ const DashboardPage = () => {
   return (
     <div className="p-6">
       {/* Header Dashboard */}
-      <h1 className="text-3xl font-bold mb-4">Welcome, {user.name}! 👋</h1>
-      <p className="text-gray-600 mb-6">Role: {user.role}</p>
+      {/* <h1 className="text-3xl font-bold mb-4">Welcome, {user.name}! 👋</h1>
+      <p className="text-gray-600 mb-6">Role: {user.role}</p> */}
 
       {/* Statistik Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -95,7 +95,7 @@ const DashboardPage = () => {
         </div>
         <div className="p-4 border rounded-md bg-white shadow-sm">
           <h3 className=" font-semibold mb-2">Total Earnings</h3>
-          <p className="font-bold text-lg">${stats.totalEarnings}</p>
+          <p className="font-bold text-lg">IDR {stats.totalEarnings}</p>
         </div>
       </div>
 

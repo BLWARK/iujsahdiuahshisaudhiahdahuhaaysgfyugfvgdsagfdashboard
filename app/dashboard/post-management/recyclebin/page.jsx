@@ -1,9 +1,11 @@
-import React from 'react'
+// /app/dashboard/recycle-bin/page.jsx
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
-}
+import React from "react";
+import RecycleBinTable from "@/components/Recyclebin/RecyclebinTable";
+import { recycleBinArticles } from "@/data/recycleBinData";
 
-export default page
+const RecycleBinPage = () => {
+  return <RecycleBinTable articles={recycleBinArticles} />;
+};
+
+export default RecycleBinPage;
