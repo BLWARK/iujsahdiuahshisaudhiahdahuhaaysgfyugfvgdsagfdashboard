@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { AiOutlineSave, AiOutlineSend } from "react-icons/ai";
 import ArticleEditor from "@/components/ArticleEditor";
 
 const TambahArtikel = () => {
@@ -40,7 +41,9 @@ const TambahArtikel = () => {
         <div className="md:col-span-2 space-y-4">
           {/* Judul Artikel */}
           <div>
-            <label className="block mb-2 font-bold text-lg">Judul Artikel:</label>
+            <label className="block mb-2 font-bold text-lg">
+              Judul Artikel:
+            </label>
             <input
               type="text"
               value={title}
@@ -70,7 +73,9 @@ const TambahArtikel = () => {
                 />
               ) : (
                 <label className="cursor-pointer">
-                  <span className="text-gray-500">Drag and drop a file here or click</span>
+                  <span className="text-gray-500">
+                    Drag and drop a file here or click
+                  </span>
                   <input
                     type="file"
                     onChange={handleImageUpload}
@@ -126,29 +131,26 @@ const TambahArtikel = () => {
           </div>
         </div>
       </div>
-
-
-
       {/* Slug SEO */}
       <div>
-         {/* Pilih Kategori */}
-      <div className="py-6">
-        <h3 className="text-lg font-medium mb-2">Kategori:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.map((category) => (
-            <label key={category} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                value={category}
-                checked={selectedCategories.includes(category)}
-                onChange={() => handleCategoryChange(category)}
-                className="w-4 h-4"
-              />
-              {category}
-            </label>
-          ))}
+        {/* Pilih Kategori */}
+        <div className="py-6">
+          <h3 className="text-lg font-medium mb-2">Kategori:</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => (
+              <label key={category} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  value={category}
+                  checked={selectedCategories.includes(category)}
+                  onChange={() => handleCategoryChange(category)}
+                  className="w-4 h-4"
+                />
+                {category}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
         <label className="block mb-2 font-medium">Slug SEO:</label>
         <input
           type="text"
@@ -158,7 +160,6 @@ const TambahArtikel = () => {
           className="w-full p-2 border rounded-md"
         />
       </div>
-
       {/* Meta Data */}
       <div>
         <label className="block mb-2 font-medium">
@@ -174,7 +175,6 @@ const TambahArtikel = () => {
           }`}
         />
       </div>
-
       {/* Deskripsi */}
       <div>
         <label className="block mb-2 font-medium">
@@ -189,9 +189,6 @@ const TambahArtikel = () => {
           }`}
         />
       </div>
-
-     
-
       {/* Tag */}
       <div>
         <label className="block mb-2 mt-4 font-medium">Tags:</label>
@@ -203,11 +200,19 @@ const TambahArtikel = () => {
           className="w-full p-2 border rounded-md"
         />
       </div>
-
+      
       {/* Tombol Simpan */}
-      <div>
-        <button className="bg-blue-600 text-white px-4 py-2 mt-4 rounded-md w-[20%]">
-          Save Article
+      <div className="flex justify-start items-center gap-4">
+        {/* Save to Draft */}
+        <button className="flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 mt-4 rounded-md w-[20%]">
+          <AiOutlineSave size={18} />
+          Save to Draft
+        </button>
+
+        {/* Submit Article */}
+        <button className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 mt-4 rounded-md w-[20%]">
+          <AiOutlineSend size={18} />
+          Submit Article
         </button>
       </div>
     </div>

@@ -10,7 +10,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Coinzone",
+  title: "Coinzone Dashboard",
   description: "Coinzone Media",
 };
 

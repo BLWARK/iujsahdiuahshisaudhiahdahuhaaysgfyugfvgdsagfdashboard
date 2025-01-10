@@ -18,7 +18,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between bg-main text-white py-6 px-10 shadow-md">
+    <div className="flex items-center justify-between bg-main text-white py-7 px-10 shadow-lg">
       {/* User Info */}
       {user && (
         <div className="flex items-center gap-4">

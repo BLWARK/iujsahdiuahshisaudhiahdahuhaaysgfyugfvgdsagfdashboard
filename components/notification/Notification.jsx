@@ -52,14 +52,14 @@ const Notification = () => {
             onClick={toggleDropdown}
             className="relative flex items-center text-white"
           >
-            <AiOutlineBell size={24} />
+            <AiOutlineBell size={30} />
             {unreadCount > 0 && (
               <span className="absolute top-0 right-0 inline-flex h-3 w-3 rounded-full bg-red-500"></span>
             )}
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md p-4">
+            <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md p-4 z-50">
               <h3 className="text-md font-semibold mb-2 text-black">Notifikasi</h3>
               {notifications.length > 0 ? (
                 <ul>
