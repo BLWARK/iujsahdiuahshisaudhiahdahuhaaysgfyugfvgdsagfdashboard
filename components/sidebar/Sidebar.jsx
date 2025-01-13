@@ -224,7 +224,7 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-gray-700">
+      {/* <div className="p-4 border-t border-gray-700">
         <button
           onClick={() => {
             localStorage.clear();
@@ -235,7 +235,7 @@ const Sidebar = () => {
           <FiLogOut size={20} />
           <span>Logout</span>
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 };
