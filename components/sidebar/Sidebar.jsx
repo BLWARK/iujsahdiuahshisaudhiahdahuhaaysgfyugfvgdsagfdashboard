@@ -16,6 +16,8 @@ import { PiSealPercent } from "react-icons/pi";
 import { GrUserSettings } from "react-icons/gr";
 import { draftArticles } from "@/data/draftArticlesData";
 import { rolePermissions } from "@/data/rolePermissions";
+import { pendingAdsData } from "@/data/pendingAdsData"; // ✅ Import data pending ads
+
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -125,6 +127,10 @@ const Sidebar = () => {
               { name: "Advertising", href: "/dashboard/marketing/advertising" },
               { name: "Press Release", href: "/dashboard/marketing/press-release" },
               { name: "Event", href: "/dashboard/marketing/event" },
+              {
+                name: `Pending Ads (${pendingAdsData.filter((ad) => ad.status === "Pending").length})`,
+                href: "/dashboard/marketing/pending-ads",
+              },
             ],
           },
         ]

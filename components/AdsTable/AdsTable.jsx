@@ -5,7 +5,11 @@ import { differenceInDays, parseISO } from "date-fns";
 import {
   AiOutlineSortAscending,
   AiOutlineSortDescending,
+  AiOutlineEdit,
+  AiOutlineDelete,
+  AiOutlineEye
 } from "react-icons/ai";
+import Image from "next/image";
 
 const AdvertisingTable = ({ ads }) => {
   const [calculatedAds, setCalculatedAds] = useState([]);
@@ -23,7 +27,7 @@ const AdvertisingTable = ({ ads }) => {
       return {
         ...ad,
         remaining: isExpired ? "Expired" : `${remainingDays} days`,
-        status: isExpired ? "Inactive" : "Active", // Overwrite status dynamically
+        status: isExpired ? "Inactive" : "Active",
       };
     });
 
@@ -31,7 +35,6 @@ const AdvertisingTable = ({ ads }) => {
   }, [ads]);
 
   const sortedAds = [...calculatedAds].sort((a, b) => {
-    // Prioritaskan "Active" di atas
     if (sortConfig.key === "status") {
       if (a.status === "Active" && b.status !== "Active") return -1;
       if (b.status === "Active" && a.status !== "Active") return 1;
@@ -76,6 +79,7 @@ const AdvertisingTable = ({ ads }) => {
       <table className="w-full text-left border-collapse">
         <thead>
           <tr>
+            <th className="border-b p-4">Gambar</th>
             <th className="border-b p-4">Nama Advertising</th>
             <th
               className="border-b p-4 cursor-pointer"
@@ -102,13 +106,30 @@ const AdvertisingTable = ({ ads }) => {
                 Status {getSortIcon("status")}
               </div>
             </th>
+            <th className="border-b p-4 w-32 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
-          {sortedAds.map((ad, index) => (
+          {sortedAds.map((ad) => (
             <tr key={ad.id} className="hover:bg-gray-50">
+              {/* Gambar */}
+              <td className="border-b p-4">
+                <Image
+                  src={ad.image || "/default-image.png"}
+                  alt={ad.name}
+                  width={50}
+                  height={50}
+                  className="rounded-md object-cover"
+                />
+              </td>
+
+              {/* Nama Iklan */}
               <td className="border-b p-4">{ad.name}</td>
+
+              {/* Tanggal Publish */}
               <td className="border-b p-4">{ad.publishDate}</td>
+
+              {/* Remaining */}
               <td className="border-b p-4">
                 {ad.remaining === "Expired" ? (
                   <span className="text-red-600">{ad.remaining}</span>
@@ -116,7 +137,11 @@ const AdvertisingTable = ({ ads }) => {
                   ad.remaining
                 )}
               </td>
+
+              {/* Space */}
               <td className="border-b p-4">{ad.space}</td>
+
+              {/* Status */}
               <td className="border-b p-4">
                 <span
                   className={`px-2 py-1 rounded-md text-xs ${
@@ -127,6 +152,30 @@ const AdvertisingTable = ({ ads }) => {
                 >
                   {ad.status}
                 </span>
+              </td>
+
+              {/* Aksi: Edit, Hapus, Preview */}
+              <td className="border-b p-4">
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    title="Preview"
+                    className="text-blue-500 hover:text-blue-700 transition"
+                  >
+                    <AiOutlineEye size={20} />
+                  </button>
+                  <button
+                    title="Edit"
+                    className="text-green-500 hover:text-green-700 transition"
+                  >
+                    <AiOutlineEdit size={20} />
+                  </button>
+                  <button
+                    title="Hapus"
+                    className="text-red-500 hover:text-red-700 transition"
+                  >
+                    <AiOutlineDelete size={20} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

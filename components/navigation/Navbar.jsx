@@ -81,12 +81,12 @@ const Navbar = () => {
 
           {/* Dropdown */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[250px] bg-white text-black shadow-md rounded-md z-50">
+            <div className="absolute right-0 mt-2 w-[250px] bg-white text-black shadow-md font-semibold rounded-md z-50">
               {portals.map((portal) => (
                 <button
                   key={portal.name}
                   onClick={() => handleSelectPortal(portal)}
-                  className={`flex items-center gap-2 px-4 py-4 w-full text-left hover:bg-gray-100 rounded-xl ${
+                  className={`flex items-center gap-2 px-4 py-4 w-full text-left hover:bg-gray-100 rounded-xl  ${
                     selectedPortal?.name === portal.name
                       ? "bg-gray-200 font-semibold"
                       : ""
