@@ -15,6 +15,7 @@ const TambahArtikel = () => {
   const [imageTitle, setImageTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [imageDescription, setImageDescription] = useState("");
+  const [scheduledDate, setScheduledDate] = useState(""); // ✅ Tambahkan untuk Jadwal Publish
 
   const categories = ["Crypto News", "Business", "Technology", "NFT"];
 
@@ -33,17 +34,56 @@ const TambahArtikel = () => {
     }
   };
 
+  // ✅ Fungsi Submit Artikel (Draft atau Submit)
+  const handleSubmit = (status) => {
+    const newArticle = {
+      title,
+      meta,
+      slug,
+      description,
+      categories: selectedCategories,
+      tags,
+      image,
+      altText,
+      imageTitle,
+      caption,
+      imageDescription,
+      scheduledDate,
+      status: status === "draft" ? "Draft" : "Pending Approval",
+      createdAt: new Date().toISOString(),
+    };
+
+    console.log("Artikel Dikirim:", newArticle);
+
+    alert(
+      status === "draft"
+        ? "Artikel berhasil disimpan sebagai Draft!"
+        : "Artikel berhasil dikirim untuk di-approve!"
+    );
+
+    // ✅ Reset Form
+    setTitle("");
+    setMeta("");
+    setSlug("");
+    setDescription("");
+    setSelectedCategories([]);
+    setTags("");
+    setImage(null);
+    setAltText("");
+    setImageTitle("");
+    setCaption("");
+    setImageDescription("");
+    setScheduledDate("");
+  };
+
   return (
     <div className="p-6 space-y-6">
-      {/* Grid untuk Judul, Markdown Editor, dan Thumbnail */}
+      {/* 🔖 Grid untuk Judul, Editor, dan Thumbnail */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        {/* Kolom Kiri: Judul Artikel & Markdown Editor */}
+        {/* 📝 Kolom Kiri: Judul Artikel & Editor */}
         <div className="md:col-span-2 space-y-4">
-          {/* Judul Artikel */}
           <div>
-            <label className="block mb-2 font-bold text-lg">
-              Judul Artikel:
-            </label>
+            <label className="block mb-2 font-bold text-lg">Judul Artikel: </label>
             <input
               type="text"
               value={title}
@@ -52,15 +92,15 @@ const TambahArtikel = () => {
             />
           </div>
 
-          {/* Isi Artikel (Markdown Editor) */}
+          {/* Editor Artikel */}
           <div>
             <h2 className="text-xl font-semibold mb-2">📝 Isi Artikel</h2>
             <ArticleEditor />
           </div>
         </div>
 
-        {/* Kolom Kanan: Thumbnail Gambar */}
-        <div>
+          {/* Kolom Kanan: Thumbnail Gambar */}
+          <div>
           <h2 className="text-xl font-semibold mb-4">🖼️ Gambar Thumbnail</h2>
           <div className="border border-gray-300 rounded-md p-4">
             {/* Area Upload Gambar */}
@@ -131,26 +171,28 @@ const TambahArtikel = () => {
           </div>
         </div>
       </div>
-      {/* Slug SEO */}
-      <div>
-        {/* Pilih Kategori */}
-        <div className="py-6">
-          <h3 className="text-lg font-medium mb-2">Kategori:</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
-              <label key={category} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  value={category}
-                  checked={selectedCategories.includes(category)}
-                  onChange={() => handleCategoryChange(category)}
-                  className="w-4 h-4"
-                />
-                {category}
-              </label>
-            ))}
-          </div>
+
+       {/* 📂 Pilih Kategori */}
+       <div>
+        <h3 className="text-lg font-medium mb-2">Kategori:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {categories.map((category) => (
+            <label key={category} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                value={category}
+                checked={selectedCategories.includes(category)}
+                onChange={() => handleCategoryChange(category)}
+                className="w-4 h-4"
+              />
+              {category}
+            </label>
+          ))}
         </div>
+      </div>
+
+      {/* 🔗 Slug SEO */}
+      <div>
         <label className="block mb-2 font-medium">Slug SEO:</label>
         <input
           type="text"
@@ -160,7 +202,11 @@ const TambahArtikel = () => {
           className="w-full p-2 border rounded-md"
         />
       </div>
-      {/* Meta Data */}
+
+     
+
+     
+      {/* 📝 Meta Data */}
       <div>
         <label className="block mb-2 font-medium">
           Meta Data ({meta.length}/85 characters):
@@ -170,26 +216,11 @@ const TambahArtikel = () => {
           value={meta}
           onChange={(e) => setMeta(e.target.value)}
           maxLength={85}
-          className={`w-full p-2 border rounded-md ${
-            meta.length > 85 ? "border-red-500" : ""
-          }`}
+          className={`w-full p-2 border rounded-md ${meta.length > 85 ? "border-red-500" : ""}`}
         />
       </div>
-      {/* Deskripsi */}
-      <div>
-        <label className="block mb-2 font-medium">
-          Description ({description.length}/150 characters):
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          maxLength={150}
-          className={`w-full p-2 border rounded-md ${
-            description.length > 150 ? "border-red-500" : ""
-          }`}
-        />
-      </div>
-      {/* Tag */}
+
+      {/* 🏷️ Tag */}
       <div>
         <label className="block mb-2 mt-4 font-medium">Tags:</label>
         <input
@@ -200,17 +231,34 @@ const TambahArtikel = () => {
           className="w-full p-2 border rounded-md"
         />
       </div>
-      
-      {/* Tombol Simpan */}
+
+       {/* 🗓️ Input Jadwal Publish */}
+       <div>
+        <label className="block mb-2 font-medium">🗓️ Jadwal Publikasi:</label>
+        <input
+          type="datetime-local"
+          value={scheduledDate}
+          onChange={(e) => setScheduledDate(e.target.value)}
+          className="w-[20%] p-2 border rounded-md cursor-pointer"
+        />
+        <p className="text-xs italic mt-2">Jika kosong artikel akan langsung terpublish setelah di approve</p>
+      </div>
+
+
+      {/* 🔘 Tombol Simpan */}
       <div className="flex justify-start items-center gap-4">
-        {/* Save to Draft */}
-        <button className="flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 mt-4 rounded-md w-[20%]">
+        <button
+          onClick={() => handleSubmit("draft")}
+          className="flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 mt-4 rounded-md w-[20%]"
+        >
           <AiOutlineSave size={18} />
           Save to Draft
         </button>
 
-        {/* Submit Article */}
-        <button className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 mt-4 rounded-md w-[20%]">
+        <button
+          onClick={() => handleSubmit("submit")}
+          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 mt-4 rounded-md w-[20%]"
+        >
           <AiOutlineSend size={18} />
           Submit Article
         </button>

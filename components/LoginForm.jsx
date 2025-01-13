@@ -43,7 +43,9 @@ export default function LoginForm() {
           role: user.role,
         })
       );
-      router.push("/dashboard");
+
+      // Arahkan ke halaman pilih portal
+      router.push("/select-portal");
     } else {
       setError("Invalid email or password!");
     }

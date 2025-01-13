@@ -7,7 +7,7 @@ const users = [
     phone: "+1-555-0101",
     address: "123 Finance St, Wall Street, NY",
     title: "Financial Analyst",
-    photo: "/rover.jpg", // Path ke foto user
+    photo: "/rozu.png", // Path ke foto user
     role: "Master", // Master | Super Admin | Editor | Contributor
     status: "Active", // Active | Pending | Suspended
     lastLogin: "2024-06-17",

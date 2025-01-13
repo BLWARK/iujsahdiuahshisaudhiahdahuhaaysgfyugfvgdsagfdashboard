@@ -5,9 +5,10 @@ export const articles = [
     category: "Crypto News",
     author: "Logan Wolfrine",
     date: "2025-01-08",
-    status: "Published", // Published | Pending | Rejected
+    status: "Published",
     image: "/Head1.jpg",
-    editor: "Rhonald Bastian", // Ditinjau oleh editor
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 2,
@@ -17,7 +18,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Rejected",
     image: "/Head1.jpg",
-    editor: "Logan Wolfrine", // Ditinjau oleh editor
+    editor: "Cecep Mahmud",
+    rejectedBy: "Shandy March",
     reason: [
       "Kurangnya data yang mendukung argumen.",
       "Format penulisan tidak sesuai dengan standar.",
@@ -32,7 +34,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Alice Johnson",
+    editor: "Cecep Mahmud",
+    approvedBy: "Shandy March",
   },
   {
     id: 4,
@@ -42,7 +45,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Rejected",
     image: "/Head1.jpg",
-    editor: "Logan Wolfrine",
+    editor: "Shandy March",
+    rejectedBy: "Cecep Mahmud",
     reason: [
       "Penjelasan kurang spesifik pada bagian teknis.",
       "Referensi yang digunakan sudah usang.",
@@ -56,7 +60,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Alice Johnson",
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 6,
@@ -75,7 +80,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Jane Smith",
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 8,
@@ -85,7 +91,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Logan Wolfrine",
+    editor: "Cecep Mahmud",
+    approvedBy: "Shandy March",
   },
   {
     id: 9,
@@ -95,7 +102,8 @@ export const articles = [
     date: "2025-01-08",
     status: "Rejected",
     image: "/Head1.jpg",
-    editor: "Rhonald Bastian",
+    editor: "Shandy March",
+    rejectedBy: "Cecep Mahmud",
     reason: [
       "Artikel kurang mendalam dan membutuhkan referensi tambahan.",
       "Struktur paragraf yang tidak konsisten.",
@@ -110,7 +118,8 @@ export const articles = [
     date: "2025-01-04",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Alice Johnson",
+    editor: "Cecep Mahmud",
+    approvedBy: "Shandy March",
   },
   {
     id: 11,
@@ -129,7 +138,8 @@ export const articles = [
     date: "2025-01-05",
     status: "Rejected",
     image: "/Head1.jpg",
-    editor: "Jane Smith",
+    editor: "Shandy March",
+    rejectedBy: "Cecep Mahmud",
     reason: [
       "Definisi konsep kurang jelas.",
       "Tidak ada contoh kasus yang relevan.",
@@ -143,9 +153,9 @@ export const articles = [
     date: "2025-01-07",
     status: "Published",
     image: "/Head1.jpg",
-    editor: "Alice Johnson",
+    editor: "Cecep Mahmud",
+    approvedBy: "Shandy March",
   },
-
   {
     id: 14,
     title: "Tokenomics: The Economics of Tokens",
@@ -154,6 +164,7 @@ export const articles = [
     date: "2025-01-06",
     status: "Rejected",
     image: "/Head1.jpg",
+    rejectedBy: "Shandy March",
   },
   {
     id: 15,
@@ -163,6 +174,8 @@ export const articles = [
     date: "2025-01-07",
     status: "Published",
     image: "/Head1.jpg",
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 16,
@@ -172,6 +185,8 @@ export const articles = [
     date: "2025-01-07",
     status: "Rejected",
     image: "/Head1.jpg",
+    editor: "Cecep Mahmud",
+    rejectedBy: "Shandy March",
     reason: [
       "Data statistik tidak diperbarui.",
       "Penulisan kurang rapi di beberapa bagian.",
@@ -186,6 +201,8 @@ export const articles = [
     date: "2025-01-07",
     status: "Published",
     image: "/Head1.jpg",
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 18,
@@ -199,6 +216,8 @@ export const articles = [
       "Terlalu banyak pengulangan konten.",
       "Tidak ada analisis mendalam tentang dampaknya.",
     ],
+    editor: "Cecep Mahmud",
+    rejectedBy: "Shandy March",
   },
   {
     id: 19,
@@ -208,6 +227,8 @@ export const articles = [
     date: "2025-01-07",
     status: "Published",
     image: "/Head1.jpg",
+    editor: "Shandy March",
+    approvedBy: "Cecep Mahmud",
   },
   {
     id: 20,
@@ -217,10 +238,38 @@ export const articles = [
     date: "2025-01-07",
     status: "Rejected",
     image: "/Head1.jpg",
+    editor: "Cecep Mahmud",
+    rejectedBy: "Shandy March",
     reason: [
       "Kurangnya studi kasus.",
       "Referensi terlalu umum.",
       "Tidak ada solusi konkret yang ditawarkan.",
     ],
+  },
+  {
+    id: 21,
+    title: "The Role of Big Data in Business Decisions",
+    category: "Business",
+    author: "Acong De Conte",
+    date: "2025-01-07",
+    status: "Published",
+    image: "/Head1.jpg",
+    editor: "Cecep Mahmud",
+    approvedBy: "Cecep Mahmud",
+  },
+  {
+    id: 22,
+    title: "How NFTs are Changing the Art Industry",
+    category: "NFT",
+    author: "Acong De Conte",
+    date: "2025-01-07",
+    status: "Rejected",
+    image: "/Head1.jpg",
+    reason: [
+      "Terlalu banyak pengulangan konten.",
+      "Tidak ada analisis mendalam tentang dampaknya.",
+    ],
+    editor: "Cecep Mahmud",
+    rejectedBy: "Shandy March",
   },
 ];

@@ -120,6 +120,7 @@ const ArticleTable = ({ articles }) => {
               </div>
             </th>
             <th className="border-b p-4">Status</th>
+            <th className="border-b p-4">Approved/Rejected By</th>
             <th className="border-b p-4">Aksi</th>
             <th className="border-b p-4">Alasan</th>
           </tr>
@@ -146,21 +147,36 @@ const ArticleTable = ({ articles }) => {
                   {article.status}
                 </span>
               </td>
-              <td className="border-b p-4 space-x-4 flex items-center">
-                <button
-                  className="text-blue-500 hover:text-blue-700 transition-all"
-                  title="Edit Artikel"
-                >
-                  <AiOutlineEdit size={20} />
-                </button>
-                <button
-                  className="text-red-500 hover:text-red-700 transition-all"
-                  title="Hapus Artikel"
-                >
-                  <AiOutlineDelete size={20} />
-                </button>
-              </td>
               <td className="border-b p-4">
+                {article.status === "Published" && article.approvedBy ? (
+                  <span className="text-green-600 font-medium">
+                    {article.approvedBy}
+                  </span>
+                ) : article.status === "Rejected" && article.rejectedBy ? (
+                  <span className="text-red-600 font-medium">
+                    {article.rejectedBy}
+                  </span>
+                ) : (
+                  "-"
+                )}
+              </td>
+              <td className="border-b p-4 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    className="text-blue-500 hover:text-blue-700 transition-all"
+                    title="Edit Artikel"
+                  >
+                    <AiOutlineEdit size={20} />
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700 transition-all"
+                    title="Hapus Artikel"
+                  >
+                    <AiOutlineDelete size={20} />
+                  </button>
+                </div>
+              </td>
+              <td className="border-b p-4 text-center">
                 {article.status === "Rejected" && (
                   <button
                     onClick={() => openReasonPopup(article.reason)}
@@ -212,15 +228,6 @@ const ArticleTable = ({ articles }) => {
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 Tutup
-              </button>
-              <button
-                onClick={() => {
-                  closeReasonPopup();
-                  window.location.href = `/edit-article/${popupArticleId}`; // Replace with your edit article route
-                }}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                Edit Artikel
               </button>
             </div>
           </div>
