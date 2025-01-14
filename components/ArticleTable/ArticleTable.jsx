@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   AiOutlineEdit,
@@ -7,8 +8,10 @@ import {
   AiOutlineSortDescending,
 } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
+import { loadArticlesByPortal } from "@/utils/loadPortalData";  // ✅ Import fungsi load data
+import { getSelectedPortal } from "@/utils/portalUtils";        // ✅ Import fungsi portal
 
-const ArticleTable = ({ articles }) => {
+const ArticleTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredArticles, setFilteredArticles] = useState([]);
   const [sortColumn, setSortColumn] = useState("date");
@@ -18,19 +21,16 @@ const ArticleTable = ({ articles }) => {
 
   const articlesPerPage = 15;
 
+  // 🔄 Ambil data artikel sesuai portal yang dipilih
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-
-    if (storedUser) {
-      const userArticles = articles.filter(
-        (article) => article.author === storedUser.name
-      );
-      setFilteredArticles(userArticles);
-    } else {
-      setFilteredArticles([]);
+    const selectedPortal = getSelectedPortal();  // Ambil portal dari localStorage
+    if (selectedPortal) {
+      const articlesData = loadArticlesByPortal(selectedPortal.id);
+      setFilteredArticles(articlesData);
     }
-  }, [articles]);
+  }, []);
 
+  // 🔀 Sorting Artikel
   const sortedArticles = [...filteredArticles].sort((a, b) => {
     const valueA = a[sortColumn];
     const valueB = b[sortColumn];
@@ -192,47 +192,23 @@ const ArticleTable = ({ articles }) => {
       </table>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-8 gap-4">
+      <div className="mt-8 flex justify-between">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-all"
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
         >
           Previous
         </button>
-        <span className="text-lg font-medium">
-          Page {currentPage} of {totalPages}
-        </span>
+        <span>Page {currentPage} of {totalPages}</span>
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-all"
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
         >
           Next
         </button>
       </div>
-
-      {/* Reason Popup */}
-      {isPopupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-1/2">
-            <h2 className="text-lg font-bold mb-4">Alasan Penolakan</h2>
-            <ul className="list-disc list-inside text-sm space-y-2">
-              {popupReason.map((reason, index) => (
-                <li key={index}>{reason}</li>
-              ))}
-            </ul>
-            <div className="mt-6 flex justify-start gap-4">
-              <button
-                onClick={closeReasonPopup}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
