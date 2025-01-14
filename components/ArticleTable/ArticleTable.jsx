@@ -8,8 +8,8 @@ import {
   AiOutlineSortDescending,
 } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
-import { loadArticlesByPortal } from "@/utils/loadPortalData";  // ✅ Import fungsi load data
-import { getSelectedPortal } from "@/utils/portalUtils";        // ✅ Import fungsi portal
+import { loadArticlesByPortal } from "@/utils/loadPortalData"; // ✅ Import fungsi load data
+import { getSelectedPortal } from "@/utils/portalUtils";       // ✅ Import fungsi portal
 
 const ArticleTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,7 +23,7 @@ const ArticleTable = () => {
 
   // 🔄 Ambil data artikel sesuai portal yang dipilih
   useEffect(() => {
-    const selectedPortal = getSelectedPortal();  // Ambil portal dari localStorage
+    const selectedPortal = getSelectedPortal(); // Ambil portal dari localStorage
     if (selectedPortal) {
       const articlesData = loadArticlesByPortal(selectedPortal.id);
       setFilteredArticles(articlesData);
@@ -95,29 +95,14 @@ const ArticleTable = () => {
         <thead>
           <tr>
             <th className="border-b p-4">#</th>
-            <th className="border-b p-4">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => handleSort("title")}
-              >
-                Judul {getSortIcon("title")}
-              </div>
+            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("title")}>
+              <div className="flex items-center gap-2">Judul {getSortIcon("title")}</div>
             </th>
-            <th className="border-b p-4">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => handleSort("category")}
-              >
-                Kategori {getSortIcon("category")}
-              </div>
+            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("category")}>
+              <div className="flex items-center gap-2">Kategori {getSortIcon("category")}</div>
             </th>
-            <th className="border-b p-4">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => handleSort("date")}
-              >
-                Tanggal {getSortIcon("date")}
-              </div>
+            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("date")}>
+              <div className="flex items-center gap-2">Tanggal {getSortIcon("date")}</div>
             </th>
             <th className="border-b p-4">Status</th>
             <th className="border-b p-4">Approved/Rejected By</th>
@@ -128,9 +113,7 @@ const ArticleTable = () => {
         <tbody>
           {currentArticles.map((article, index) => (
             <tr key={article.id} className="hover:bg-gray-50">
-              <td className="border-b p-4">
-                {index + 1 + (currentPage - 1) * articlesPerPage}
-              </td>
+              <td className="border-b p-4">{index + 1 + (currentPage - 1) * articlesPerPage}</td>
               <td className="border-b p-4">{article.title}</td>
               <td className="border-b p-4">{article.category}</td>
               <td className="border-b p-4">{article.date}</td>
@@ -148,33 +131,15 @@ const ArticleTable = () => {
                 </span>
               </td>
               <td className="border-b p-4">
-                {article.status === "Published" && article.approvedBy ? (
-                  <span className="text-green-600 font-medium">
-                    {article.approvedBy}
-                  </span>
-                ) : article.status === "Rejected" && article.rejectedBy ? (
-                  <span className="text-red-600 font-medium">
-                    {article.rejectedBy}
-                  </span>
-                ) : (
-                  "-"
-                )}
+                {article.status === "Published" ? article.approvedBy : article.rejectedBy || "-"}
               </td>
               <td className="border-b p-4 text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    className="text-blue-500 hover:text-blue-700 transition-all"
-                    title="Edit Artikel"
-                  >
-                    <AiOutlineEdit size={20} />
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700 transition-all"
-                    title="Hapus Artikel"
-                  >
-                    <AiOutlineDelete size={20} />
-                  </button>
-                </div>
+                <button className="text-blue-500 hover:text-blue-700">
+                  <AiOutlineEdit size={20} />
+                </button>
+                <button className="text-red-500 hover:text-red-700 ml-2">
+                  <AiOutlineDelete size={20} />
+                </button>
               </td>
               <td className="border-b p-4 text-center">
                 {article.status === "Rejected" && (
@@ -190,6 +155,30 @@ const ArticleTable = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Popup Alasan Penolakan */}
+      {isPopupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-md shadow-lg w-1/3 relative">
+            <button
+              onClick={closeReasonPopup}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <IoClose size={24} />
+            </button>
+            <h2 className="text-lg font-semibold mb-4">Alasan Penolakan</h2>
+            {popupReason.length ? (
+              <ul className="list-disc list-inside">
+                {popupReason.map((reason, index) => (
+                  <li key={index}>{reason}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Tidak ada alasan yang diberikan.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="mt-8 flex justify-between">
