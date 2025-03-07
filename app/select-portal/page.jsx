@@ -37,7 +37,7 @@ export default function SelectPortal() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-main z-50 overflow-y-auto ">
-      <div className="bg-white px-20 py-40 2xl:mt-0 xl:mt-0 lg:mt-0 mt-40 rounded-lg shadow-lg max-w-6xl w-full relative">
+      <div className="bg-white px-20 2xl:py-40 xl:py-40 lg:py-20 py-40 2xl:mt-0 xl:mt-0 lg:mt-0 mt-40 rounded-lg shadow-lg max-w-6xl w-full relative">
         {/* 🔴 Tombol Close di Pojok Kanan */}
         <button
           onClick={handleClose}
