@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import LoginForm from "@/components/LoginForm";
+import { IoWarning } from "react-icons/io5";
 import Image from "next/image";
 
 export default function LoginPage() {
@@ -30,8 +31,9 @@ export default function LoginPage() {
       {/* Konten Login */}
       <div className="flex h-screen">
         {/* Bagian Kiri: Form Login */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
+        <div className="w-full md:w-1/2 flex flex-col 2xl:justify-center xl:justify-center lg:justify-center justify-start items-center p-8 bg-white">
           <div className="max-w-md w-full">
+            <p  className="text-gray-200 bg-red-700 p-3 py-10 rounded-lg 2xl:hidden xl:hidden lg:hidden text-center justify-center items-center gap-4 flex flex-col"> <IoWarning className="text-[100px] justify-center items-center flex animate-pulse" />For the best experience please use Desktop or Tablet Device</p>
             <div className="w-full flex flex-col justify-center items-center">
               {/* Logo */}
               <div className="relative w-[200px] h-[100px]">

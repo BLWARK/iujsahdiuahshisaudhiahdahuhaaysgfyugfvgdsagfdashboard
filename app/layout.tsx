@@ -22,10 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <div className="flex flex-col justify-center items-center overflow-hidden bg-gray-100 w-full  ">
+        <div className="flex flex-col justify-center items-center overflow-hidden bg-gray-100 w-full overflow-x-auto  ">
           
           {/* Hero Section */}
-          <div className="text-black w-full 2xl:px-0 px-3 ">{children}</div>
+          <div className="text-black w-full px-0 ">{children}</div>
          
         </div>
       </body>

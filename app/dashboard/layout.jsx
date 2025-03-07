@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }) {
         <Navbar className="w-full fixed top-0 left-64 z-50 bg-main text-white" />
 
         {/* Konten di Bawah Navbar */}
-        <main className="flex-1 overflow-y-auto  bg-gray-100 p-6 text-main">
+        <main className="flex-1 overflow-y-auto  bg-gray-100 2xl:p-6  xl:p-6 lg:p-6 p-0 pb-20 text-main">
           {children}
         </main>
       </div>
