@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AiOutlineCheck,
   AiOutlineClose,
@@ -9,20 +9,32 @@ import {
   AiOutlineSortDescending,
 } from "react-icons/ai";
 import { formatDistanceToNow } from "date-fns";
+import { useBackend } from "@/context/BackContext"; // Gunakan BackContext untuk mengambil artikel
 
-const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
-  const [sortConfig, setSortConfig] = useState({ key: "status", direction: "asc" });
+const ArticleReviewTable = () => {
+  const { articles, getArticles, approveArticle } = useBackend(); // Mengambil artikel dari BackContext
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({
+    key: "status",
+    direction: "asc",
+  });
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectArticleId, setRejectArticleId] = useState(null);
-
   const [isPreviewPopupOpen, setIsPreviewPopupOpen] = useState(false);
   const [previewArticle, setPreviewArticle] = useState(null);
 
-  const sortedArticles = [...articles].sort((a, b) => {
-    if (a.status === "Pending" && b.status !== "Pending") return -1;
-    if (b.status === "Pending" && a.status !== "Pending") return 1;
+  // Ambil data artikel "Pending" saja
+  const pendingArticles = articles.filter(
+    (article) => article.status === "Pending"
+  );
 
+  useEffect(() => {
+    getArticles(); // Ambil data artikel saat komponen pertama kali dimuat
+  }, [getArticles]);
+
+  // Urutkan Artikel
+  const sortedArticles = [...pendingArticles].sort((a, b) => {
     if (sortConfig.key === "date") {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
@@ -37,6 +49,7 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
     return 0;
   });
 
+  // Fungsi untuk mengubah urutan penyortiran
   const handleSort = (key) => {
     setSortConfig((prev) => ({
       key,
@@ -44,6 +57,7 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
     }));
   };
 
+  // Menampilkan ikon untuk urutan penyortiran
   const getSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === "asc" ? (
@@ -55,38 +69,63 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
     return <AiOutlineSortAscending size={16} className="text-gray-400" />;
   };
 
+  // Fungsi untuk membuka popup penolakan
   const openRejectPopup = (id) => {
     setRejectArticleId(id);
     setIsRejectPopupOpen(true);
   };
 
+  // Fungsi untuk menutup popup penolakan
   const closeRejectPopup = () => {
     setRejectReason("");
     setRejectArticleId(null);
     setIsRejectPopupOpen(false);
   };
 
+  // Fungsi untuk mengonfirmasi penolakan artikel
   const confirmReject = () => {
     if (rejectReason.trim() === "") {
       alert("Masukkan alasan penolakan terlebih dahulu.");
       return;
     }
-    onReject(rejectArticleId, rejectReason);
+    // Panggil fungsi onReject yang akan menangani penolakan
+    // onReject(rejectArticleId, rejectReason);
     closeRejectPopup();
   };
 
+  // Fungsi untuk membuka popup pratinjau artikel
   const openPreviewPopup = (article) => {
     setPreviewArticle(article);
     setIsPreviewPopupOpen(true);
   };
 
+  // Fungsi untuk menutup popup pratinjau artikel
   const closePreviewPopup = () => {
     setPreviewArticle(null);
     setIsPreviewPopupOpen(false);
   };
 
+  // Ambil nama penulis dari localStorage
+  // Fungsi untuk mengambil nama penulis berdasarkan artikel
+const getAuthorName = (article) => {
+  return article.author?.username || "Tidak Dikenal"; // Menggunakan data author dari artikel
+};
+
+
+  // Fungsi untuk menangani approve artikel
+  const handleApprove = async (articleId) => {
+    try {
+      // Panggil fungsi approveArticle dari BackContext
+      await approveArticle(articleId);
+      alert("Artikel berhasil disetujui!");
+    } catch (error) {
+      console.error("Gagal menyetujui artikel:", error);
+      alert("Terjadi kesalahan saat menyetujui artikel.");
+    }
+  };
+
   return (
-    <div className="bg-white p-6 rounded-md shadow-md">
+    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
       <h2 className="text-2xl font-bold mb-6">📝 Daftar Artikel</h2>
       <table className="w-full text-left border-collapse">
         <thead>
@@ -130,7 +169,7 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
         </thead>
         <tbody>
           {sortedArticles.map((article, index) => (
-            <tr key={article.id} className="hover:bg-gray-50">
+            <tr key={article.article_id || index} className="hover:bg-gray-50">
               <td className="border-b p-4">{index + 1}</td>
               <td className="border-b p-4">
                 <div className="flex items-center gap-2">
@@ -145,9 +184,12 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
                 </div>
               </td>
               <td className="border-b p-4">{article.category}</td>
-              <td className="border-b p-4">{article.author}</td>
+              <td className="border-b p-4">{getAuthorName(article)}</td>
+              {/* Ambil nama penulis dari localStorage */}
               <td className="border-b p-4 text-xs">
-                {formatDistanceToNow(new Date(article.date), { addSuffix: true })}
+                {formatDistanceToNow(new Date(article.date), {
+                  addSuffix: true,
+                })}
               </td>
               <td className="border-b p-4">
                 <span
@@ -168,14 +210,14 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
                     <button
                       className="text-green-500 hover:text-green-700 transition-all"
                       title="Setujui Artikel"
-                      onClick={() => onApprove(article.id)}
+                      onClick={() => handleApprove(article.article_id)} // Menggunakan handleApprove
                     >
                       <AiOutlineCheck size={20} />
                     </button>
                     <button
                       className="text-red-500 hover:text-red-700 transition-all"
                       title="Tolak Artikel"
-                      onClick={() => openRejectPopup(article.id)}
+                      onClick={() => openRejectPopup(article.article_id)}
                     >
                       <AiOutlineClose size={20} />
                     </button>
@@ -191,7 +233,9 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
       {isPreviewPopupOpen && previewArticle && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-md shadow-md w-1/2">
-            <h3 className="text-lg font-semibold mb-4">{previewArticle.title}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {previewArticle.title}
+            </h3>
             <img
               src={previewArticle.image}
               alt={previewArticle.title}
@@ -201,7 +245,7 @@ const ArticleReviewTable = ({ articles, onApprove, onReject }) => {
               <strong>Kategori:</strong> {previewArticle.category}
             </p>
             <p className="mb-2">
-              <strong>Penulis:</strong> {previewArticle.author}
+              <strong>Penulis:</strong> {getAuthorName()}
             </p>
             <p className="mb-2">
               <strong>Status:</strong>{" "}

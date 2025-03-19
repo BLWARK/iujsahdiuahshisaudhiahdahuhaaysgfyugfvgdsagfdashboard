@@ -53,7 +53,7 @@ const RecycleBinTable = ({ articles }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md">
+    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
       <h2 className="text-2xl font-bold mb-6">🗑️ Recycle Bin</h2>
       <table className="w-full text-left border-collapse">
         <thead>

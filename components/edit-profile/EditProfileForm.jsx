@@ -1,58 +1,67 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import users from "@/data/users"; // Import data users.js
+import { useBackend } from "@/context/BackContext";
 
 const EditProfileForm = () => {
-  const [user, setUser] = useState(null);
+  const { user, updateProfile, uploadImage } = useBackend();
   const [nickname, setNickname] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [avatar, setAvatar] = useState("/default-avatar.png");
+  const [avatarFile, setAvatarFile] = useState(null);
 
-  // 🔎 Ambil data user dari localStorage saat halaman dimuat
+  // Saat user berubah, set field form sesuai data user
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-
-    if (storedUser) {
-      // Cari detail user berdasarkan ID di data users
-      const detailedUser = users.find((u) => u.id === storedUser.id);
-
-      if (detailedUser) {
-        setUser(detailedUser);
-        setNickname(detailedUser.nickname || "");
-        setPhone(detailedUser.phone || "");
-        setAddress(detailedUser.address || "");
-        setAvatar(detailedUser.photo || "/default-avatar.png");
-      }
+    if (user) {
+      setNickname(user.nickname || "");
+      setPhone(user.phone || "");
+      setAddress(user.address || "");
+      setAvatar(user.photo || "/default-avatar.png");
     }
-  }, []);
+  }, [user]);
 
-  // 🔄 Handle ganti avatar
+  // Handle perubahan avatar
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setAvatarFile(file);
       const newAvatar = URL.createObjectURL(file);
       setAvatar(newAvatar);
     }
   };
 
-  // 💾 Simpan perubahan
-  const handleSubmit = (e) => {
+  // Handle submit form
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    let photoUrl = avatar;
+
+    if (avatarFile) {
+      try {
+        // Upload avatar menggunakan fungsi uploadImage dari context
+        photoUrl = await uploadImage(avatarFile);
+      } catch (error) {
+        console.error("Gagal mengupload avatar:", error);
+        alert("Gagal mengupload avatar.");
+        return;
+      }
+    }
 
     const updatedUser = {
       ...user,
       nickname,
       phone,
       address,
-      photo: avatar,
+      photo: photoUrl,
     };
 
-    // Simpan perubahan di localStorage
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    alert("Profil berhasil diperbarui!");
+    try {
+      await updateProfile(updatedUser);
+      alert("Profil berhasil diperbarui!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Terjadi kesalahan saat memperbarui profil.");
+    }
   };
 
   if (!user) {
@@ -70,7 +79,7 @@ const EditProfileForm = () => {
               src={avatar}
               alt="Avatar"
               fill
-              objectFit="cover" // ✅ Gambar akan di-crop dan menyesuaikan lingkaran
+              objectFit="cover"
               className="rounded-full border border-gray-300"
             />
           </div>
@@ -85,7 +94,9 @@ const EditProfileForm = () => {
 
       {/* Nickname */}
       <div>
-        <label className="block mb-1 font-semibold text-main">Nickname</label>
+        <label className="block mb-1 font-semibold text-main">
+          Nickname
+        </label>
         <input
           type="text"
           value={nickname}
@@ -108,7 +119,9 @@ const EditProfileForm = () => {
 
       {/* Nomor HP */}
       <div>
-        <label className="block mb-1 font-semibold text-main">Nomor HP</label>
+        <label className="block mb-1 font-semibold text-main">
+          Nomor HP
+        </label>
         <input
           type="text"
           value={phone}
@@ -120,7 +133,9 @@ const EditProfileForm = () => {
 
       {/* Alamat */}
       <div>
-        <label className="block mb-1 font-semibold text-main">Alamat</label>
+        <label className="block mb-1 font-semibold text-main">
+          Alamat
+        </label>
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}

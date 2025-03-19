@@ -14,9 +14,9 @@ const ArticlePopup = ({ articles, onClose, onSelect }) => {
           <IoClose size={24} />
         </button>
         <ul className="space-y-2">
-          {articles.map((article) => (
+        {articles.map((article, index) => (
             <li
-              key={article.id}
+            key={article._id || article.article_id || `${article.platform_id}-${index}`}
               className="flex justify-between items-center p-2 border rounded-md hover:bg-gray-100"
             >
               <span className="text-sm">{article.title}</span>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { BackProvider } from "@/context/BackContext";
 
 // import ScrollTop from "@/components/scroll-to-top/Scroll"
 import "./globals.css";
@@ -22,12 +23,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
+        <BackProvider>
         <div className="flex flex-col justify-center items-center overflow-hidden bg-gray-100 w-full overflow-x-auto  ">
           
           {/* Hero Section */}
           <div className="text-black w-full px-0 ">{children}</div>
          
         </div>
+        </BackProvider>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -9,38 +9,17 @@ import { TbFileSettings } from "react-icons/tb";
 import { LuNotebookPen } from "react-icons/lu";
 import { PiSealPercent } from "react-icons/pi";
 import { GrUserSettings } from "react-icons/gr";
+import { useBackend } from "@/context/BackContext"; // ✅ Ambil data user dari backend
 import { draftArticles } from "@/data/draftArticlesData";
 import { rolePermissions } from "@/data/rolePermissions";
 import { pendingAdsData } from "@/data/pendingAdsData";
 import SidebarSubMenu from "./SidebarSubMenu";
 import UserProfile from "../navigation/UserProfile";
-import users from "@/data/users";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
+  const { user, role } = useBackend(); // ✅ Ambil user & role dari BackContext
   const [openSubMenu, setOpenSubMenu] = useState({});
-  const [userRole, setUserRole] = useState("Guest");
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (storedUser) {
-      const detailedUser = users.find((u) => u.id === storedUser.id);
-      setUser(detailedUser || storedUser);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("currentUser");
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUserRole(parsedUser?.role || "Guest");
-      } else {
-        setUserRole("Guest");
-      }
-    }
-  }, []);
 
   const toggleSubMenu = (key) => {
     setOpenSubMenu((prev) => ({
@@ -50,7 +29,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const hasPermission = (feature) => {
-    const permissions = rolePermissions[userRole];
+    const permissions = rolePermissions[role];
     return permissions?.includes(feature);
   };
 
@@ -83,7 +62,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { name: "Berita Popular", href: "/dashboard/content-management/berita-populer" },
       ],
     },
-    ...(userRole === "Master" || userRole === "Super Admin" || userRole === "Editor"
+    ...(role === "Master" || role === "Super Admin" || role === "Editor"
       ? [
           {
             name: "User Management",
@@ -126,7 +105,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       className={`bg-main text-white w-64 h-full 2xl:relative shadow-lg z-50 overflow-y-auto ${
         isOpen
           ? "fixed inset-y-0 left-0 transform translate-x-0 transition-transform duration-300 ease-in-out"
-          : "fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out 2xl:block 2xl:translate-x-0  "
+          : "fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out 2xl:block 2xl:translate-x-0"
       }`}
     >
       {/* Tombol Close untuk layar kecil */}
@@ -136,11 +115,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       >
         ✖
       </button>
-    
+
       <div className="p-4 text-left border-b border-gray-700 2xl:mt-5 xl:mt-10 lg:mt-10 mt-0">
         <div className="2xl:py-0 xl:py-0 lg:py-0 py-5 2xl:hidden xl:hidden lg:hidden block">
-      <UserProfile user={user}/>
-      </div>
+          <UserProfile user={user} />
+        </div>
         <Link
           href="/dashboard/buat-artikel"
           className="flex items-center gap-4 py-5 px-10 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"

@@ -7,31 +7,42 @@ import {
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
-import { IoClose } from "react-icons/io5";
-import { loadArticlesByPortal } from "@/utils/loadPortalData"; // ✅ Import fungsi load data
-import { getSelectedPortal } from "@/utils/portalUtils";       // ✅ Import fungsi portal
+import { useBackend } from "@/context/BackContext"; // Ambil data artikel dan fungsi getArticles dari context
 
 const ArticleTable = () => {
+  const { articles, getArticles, user } = useBackend(); // Ambil data artikel dan user dari context
   const [currentPage, setCurrentPage] = useState(1);
-  const [filteredArticles, setFilteredArticles] = useState([]);
   const [sortColumn, setSortColumn] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [popupReason, setPopupReason] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [prevPlatformId, setPrevPlatformId] = useState(null);
 
   const articlesPerPage = 15;
 
-  // 🔄 Ambil data artikel sesuai portal yang dipilih
+  // Ambil platform_id yang sudah dipilih dari localStorage
   useEffect(() => {
-    const selectedPortal = getSelectedPortal(); // Ambil portal dari localStorage
-    if (selectedPortal) {
-      const articlesData = loadArticlesByPortal(selectedPortal.id);
-      setFilteredArticles(articlesData);
-    }
-  }, []);
+    const storedPortal = JSON.parse(localStorage.getItem("selectedPortal"));
 
-  // 🔀 Sorting Artikel
-  const sortedArticles = [...filteredArticles].sort((a, b) => {
+    if (storedPortal && storedPortal.platform_id) {
+      if (prevPlatformId !== storedPortal.platform_id) {
+        getArticles(storedPortal.platform_id);
+        setPrevPlatformId(storedPortal.platform_id);
+      }
+    }
+    setIsLoading(false);
+  }, [getArticles, prevPlatformId]);
+
+  // Cek apakah `articles` adalah array dan user memiliki `author_id`
+  const filteredArticles = Array.isArray(articles)
+    ? articles.filter(
+        (article) =>
+          article.platform_id === JSON.parse(localStorage.getItem("selectedPortal"))?.platform_id &&
+          article.author_id === user?.user_id // 🔥 Filter berdasarkan author_id
+      )
+    : [];
+
+  // Sorting Artikel
+  const sortedArticles = filteredArticles.sort((a, b) => {
     const valueA = a[sortColumn];
     const valueB = b[sortColumn];
 
@@ -78,19 +89,13 @@ const ArticleTable = () => {
     return <AiOutlineSortAscending size={16} className="text-gray-400" />;
   };
 
-  const openReasonPopup = (reason) => {
-    setPopupReason(reason);
-    setIsPopupOpen(true);
-  };
-
-  const closeReasonPopup = () => {
-    setPopupReason([]);
-    setIsPopupOpen(false);
-  };
+  if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Daftar Artikel</h2>
+    <div className="bg-white p-6 rounded-md shadow-md w-full">
+      <h2 className="text-2xl font-bold mb-6">
+        Daftar Artikel - {JSON.parse(localStorage.getItem("selectedPortal"))?.platform_name || "Pilih Portal"}
+      </h2>
       <table className="w-full text-left border-collapse">
         <thead>
           <tr>
@@ -112,27 +117,19 @@ const ArticleTable = () => {
         </thead>
         <tbody>
           {currentArticles.map((article, index) => (
-            <tr key={article.id} className="hover:bg-gray-50">
+            <tr key={article._id} className="hover:bg-gray-50">
               <td className="border-b p-4">{index + 1 + (currentPage - 1) * articlesPerPage}</td>
               <td className="border-b p-4">{article.title}</td>
-              <td className="border-b p-4">{article.category}</td>
-              <td className="border-b p-4">{article.date}</td>
+              <td className="border-b p-4">{article.category.length > 0 ? article.category.join(", ") : "No Category"}</td>
+              <td className="border-b p-4">{new Date(article.date).toLocaleDateString()}</td>
               <td className="border-b p-4">
                 <span
-                  className={`px-2 py-1 text-sm rounded-md ${
-                    article.status === "Published"
-                      ? "bg-green-200 text-green-700"
-                      : article.status === "Rejected"
-                      ? "bg-red-200 text-red-700"
-                      : "bg-yellow-200 text-yellow-700"
-                  }`}
+                  className={`px-2 py-1 text-sm rounded-md ${article.status === "Published" ? "bg-green-200 text-green-700" : article.status === "Rejected" ? "bg-red-200 text-red-700" : "bg-yellow-200 text-yellow-700"}`}
                 >
                   {article.status}
                 </span>
               </td>
-              <td className="border-b p-4">
-                {article.status === "Published" ? article.approvedBy : article.rejectedBy || "-"}
-              </td>
+              <td className="border-b p-4">{article.approved_by || "-"}</td>
               <td className="border-b p-4 text-center">
                 <button className="text-blue-500 hover:text-blue-700">
                   <AiOutlineEdit size={20} />
@@ -155,30 +152,6 @@ const ArticleTable = () => {
           ))}
         </tbody>
       </table>
-
-      {/* Popup Alasan Penolakan */}
-      {isPopupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-md shadow-lg w-1/3 relative">
-            <button
-              onClick={closeReasonPopup}
-              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-            >
-              <IoClose size={24} />
-            </button>
-            <h2 className="text-lg font-semibold mb-4">Alasan Penolakan</h2>
-            {popupReason.length ? (
-              <ul className="list-disc list-inside">
-                {popupReason.map((reason, index) => (
-                  <li key={index}>{reason}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>Tidak ada alasan yang diberikan.</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Pagination */}
       <div className="mt-8 flex justify-between">

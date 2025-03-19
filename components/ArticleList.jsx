@@ -4,9 +4,9 @@ import React from "react";
 const ArticleList = ({ articles, onAdd }) => {
   return (
     <ul className="space-y-2 max-h-96 overflow-auto border-t pt-2">
-      {articles.map((article) => (
+      {articles.map((article, index) => (
         <li
-          key={article.id}
+          key={article._id || article.article_id || `${article.platform_id}-${index}`} // ✅ Gunakan _id atau article_id
           className="flex justify-between items-center p-2 border rounded-md hover:bg-gray-100"
         >
           <span className="text-sm">{article.title}</span>
@@ -23,3 +23,4 @@ const ArticleList = ({ articles, onAdd }) => {
 };
 
 export default ArticleList;
+

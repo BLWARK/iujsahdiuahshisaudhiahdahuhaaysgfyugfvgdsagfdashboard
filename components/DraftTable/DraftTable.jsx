@@ -1,11 +1,26 @@
 "use client";
-import React, { useState } from "react";
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineSortAscending, AiOutlineSortDescending } from "react-icons/ai";
+import React, { useState, useEffect } from "react";
+import {
+  AiOutlineEdit,
+  AiOutlineDelete,
+  AiOutlineSortAscending,
+  AiOutlineSortDescending,
+} from "react-icons/ai";
+import { useBackend } from "@/context/BackContext"; // ✅ Gunakan BackContext untuk mendapatkan artikel
 
-const DraftTable = ({ articles }) => {
+const DraftTable = () => {
+  const { articles, getDraftArticles } = useBackend(); // Mengambil artikel dari BackContext
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
   const articlesPerPage = 15;
+
+  // Mengambil data artikel draft dari BackContext ketika komponen pertama kali dimuat
+  useEffect(() => {
+    getDraftArticles(); // Panggil fungsi untuk mendapatkan artikel draft
+  }, []); // Akan dipanggil ketika getDraftArticles berubah
 
   // Sort Articles
   const sortedArticles = [...articles].sort((a, b) => {
@@ -44,24 +59,34 @@ const DraftTable = ({ articles }) => {
         <AiOutlineSortDescending size={16} className="inline" />
       );
     }
-    return <AiOutlineSortAscending size={16} className="text-gray-400 inline" />;
+    return (
+      <AiOutlineSortAscending size={16} className="text-gray-400 inline" />
+    );
   };
-  
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md">
+    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
       <h2 className="text-2xl font-bold mb-6">📄 Draft Articles</h2>
       <table className="w-full text-left border-collapse">
         <thead>
           <tr>
             <th className="border-b p-4">#</th>
-            <th className="border-b p-4 cursor-pointer " onClick={() => handleSort("title")}>
+            <th
+              className="border-b p-4 cursor-pointer "
+              onClick={() => handleSort("title")}
+            >
               Judul {getSortIcon("title")}
             </th>
-            <th className="border-b p-4 cursor-pointer  " onClick={() => handleSort("category")}>
+            <th
+              className="border-b p-4 cursor-pointer  "
+              onClick={() => handleSort("category")}
+            >
               Kategori {getSortIcon("category")}
             </th>
-            <th className="border-b p-4 cursor-pointer " onClick={() => handleSort("date")}>
+            <th
+              className="border-b p-4 cursor-pointer "
+              onClick={() => handleSort("date")}
+            >
               Tanggal {getSortIcon("date")}
             </th>
             <th className="border-b p-4">Aksi</th>
@@ -69,16 +94,24 @@ const DraftTable = ({ articles }) => {
         </thead>
         <tbody>
           {currentArticles.map((article, index) => (
-            <tr key={article.id} className="hover:bg-gray-50">
-              <td className="border-b p-4">{index + 1 + (currentPage - 1) * articlesPerPage}</td>
+            <tr key={article.article_id || index} className="hover:bg-gray-50">
+              <td className="border-b p-4">
+                {index + 1 + (currentPage - 1) * articlesPerPage}
+              </td>
               <td className="border-b p-4">{article.title}</td>
               <td className="border-b p-4">{article.category}</td>
               <td className="border-b p-4">{article.date}</td>
               <td className="border-b p-4 space-x-4 flex items-center">
-                <button className="text-blue-500 hover:text-blue-700 transition-all" title="Edit Draft">
+                <button
+                  className="text-blue-500 hover:text-blue-700 transition-all"
+                  title="Edit Draft"
+                >
                   <AiOutlineEdit size={20} />
                 </button>
-                <button className="text-red-500 hover:text-red-700 transition-all" title="Hapus Draft">
+                <button
+                  className="text-red-500 hover:text-red-700 transition-all"
+                  title="Hapus Draft"
+                >
                   <AiOutlineDelete size={20} />
                 </button>
               </td>

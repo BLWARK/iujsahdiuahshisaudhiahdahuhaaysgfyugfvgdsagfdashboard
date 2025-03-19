@@ -2,42 +2,85 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import portals from "@/data/portals"; // ✅ Import data portal
+
+// ✅ Portal tersedia secara statis, tetapi akses dikontrol oleh backend
+const portals = [
+  { id: 1, name: "XYZone", logo: "/icon XYZone.png" },
+  { id: 2, name: "LBJ", logo: "/Final Logo LBJ.png" },
+  { id: 3, name: "CoinZone", logo: "/Artboard 2.png" },
+];
 
 export default function SelectPortal() {
   const router = useRouter();
   const [selectedPortal, setSelectedPortal] = useState(null);
+  const [allowedPortals, setAllowedPortals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Cek apakah user sudah login
+  // ✅ Ambil data user dan platform dari localStorage
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (!user) {
+    if (typeof window === "undefined") return; // Hindari error SSR
+
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const storedPlatforms = JSON.parse(localStorage.getItem("platforms") || "[]");
+    const storedSelectedPortal = JSON.parse(localStorage.getItem("selectedPortal") || "null");
+
+    if (!user || !storedPlatforms.length) {
       router.push("/login"); // Redirect ke login jika belum login
+    } else {
+      setAllowedPortals(storedPlatforms);
+      setIsLoading(false);
+
+      // ✅ Jika ada portal yang sudah dipilih sebelumnya, gunakan kembali
+      if (storedSelectedPortal) {
+        console.log("✅ Menggunakan portal yang sebelumnya dipilih:", storedSelectedPortal);
+        setSelectedPortal(storedSelectedPortal);
+      }
     }
   }, [router]);
 
   // ✅ Handle pemilihan portal
   const handleSelectPortal = (portal) => {
-    setSelectedPortal(portal);
+    const matchedPortal = allowedPortals.find((p) => p.platform_id === portal.id);
+
+    if (matchedPortal) {
+      setSelectedPortal(matchedPortal);
+      localStorage.setItem("selectedPortal", JSON.stringify(matchedPortal));
+      console.log("✅ Portal dipilih & disimpan di localStorage:", matchedPortal);
+    } else {
+      console.warn("⚠️ Portal tidak ditemukan dalam daftar platform yang diizinkan.");
+    }
   };
 
-  // ✅ Handle konfirmasi pilihan portal
+  // ✅ Pastikan user dan token masih ada di localStorage sebelum pindah ke dashboard
   const handleConfirmSelection = () => {
-    if (selectedPortal) {
-      localStorage.setItem("selectedPortal", JSON.stringify(selectedPortal));
-      router.push("/dashboard"); // Redirect ke dashboard
+    if (!selectedPortal) {
+      alert("Silakan pilih portal terlebih dahulu.");
+      return;
+    }
+
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      alert("Sesi login telah habis, silakan login kembali.");
+      router.push("/login");
+    } else {
+      console.log("✅ Portal dikonfirmasi, redirect ke dashboard...");
+      router.push("/dashboard");
     }
   };
 
   // ✅ Handle tombol Close (Kembali ke Login)
   const handleClose = () => {
-    localStorage.removeItem("currentUser"); // Optional: Logout user
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("platforms");
     router.push("/login");
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-main z-50 overflow-y-auto ">
-      <div className="bg-white px-20 2xl:py-40 xl:py-40 lg:py-20 py-40 2xl:mt-0 xl:mt-0 lg:mt-0 mt-40 rounded-lg shadow-lg max-w-6xl w-full relative">
+    <div className="fixed inset-0 flex items-center justify-center bg-main z-50 overflow-y-auto">
+      <div className="bg-white px-20 py-20 rounded-lg shadow-lg max-w-6xl w-full relative">
         {/* 🔴 Tombol Close di Pojok Kanan */}
         <button
           onClick={handleClose}
@@ -51,36 +94,55 @@ export default function SelectPortal() {
           Pilih Portal Berita
         </h1>
 
-        {/* ✅ Portal List */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {portals.map((portal) => (
-            <button
-              key={portal.id}
-              onClick={() => handleSelectPortal(portal)}
-              className={`border-4 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all ${
-                selectedPortal?.id === portal.id
-                  ? "border-blue-600 shadow-lg scale-105"
-                  : "border-gray-300 hover:border-blue-300"
-              }`}
-            >
-              <div className="relative w-32 h-32 mb-4">
-                <Image
-                  src={portal.logo}
-                  alt={portal.name}
-                  layout="fill"
-                  objectFit="contain"
-                />
-              </div>
-              <h3 className="text-xl font-semibold">{portal.name}</h3>
+        {/* ✅ Tampilkan loading jika masih mengambil data */}
+        {isLoading ? (
+          <p className="text-center text-gray-500">Memuat platform...</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {portals.map((portal) => {
+              const isAllowed = allowedPortals.some((p) => p.platform_id === portal.id);
+              const isSelected = selectedPortal?.platform_id === portal.id;
 
-              {selectedPortal?.id === portal.id && (
-                <div className="mt-3 text-green-600 font-semibold">
-                  ✅ Dipilih
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
+              return (
+                <button
+                  key={portal.id}
+                  onClick={() => handleSelectPortal(portal)}
+                  disabled={!isAllowed}
+                  className={`border-4 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all ${
+                    isSelected
+                      ? "border-blue-600 shadow-lg scale-105"
+                      : isAllowed
+                      ? "border-gray-300 hover:border-blue-300"
+                      : "border-gray-200 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <div className="relative w-32 h-32 mb-4">
+                    <Image
+                      src={portal.logo}
+                      alt={portal.name}
+                      width={128}
+                      height={128}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <h3 className="text-xl font-semibold">{portal.name}</h3>
+
+                  {isSelected && (
+                    <div className="mt-3 text-green-600 font-semibold">
+                      ✅ Dipilih
+                    </div>
+                  )}
+
+                  {!isAllowed && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      ❌ Akses tidak tersedia
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* ✅ Tombol Konfirmasi */}
         <div className="mt-10 flex justify-center">
