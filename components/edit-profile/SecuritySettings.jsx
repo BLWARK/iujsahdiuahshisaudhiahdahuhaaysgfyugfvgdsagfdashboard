@@ -1,87 +1,73 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import { useBackend } from "@/context/BackContext";
+import { useRouter } from "next/navigation";
 
 const SecuritySettings = () => {
+  const { changePassword } = useBackend();
+  const router = useRouter();
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState("");
 
-  // Ambil data user dari localStorage
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-    setUser(storedUser);
-  }, []);
-
-  // Handle submit untuk ubah password
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (newPassword !== confirmPassword) {
-      alert("Password baru tidak cocok!");
+      setError("Password baru tidak cocok!");
       return;
     }
 
-    if (currentPassword !== user.password) {
-      alert("Password lama salah!");
-      return;
+    try {
+      await changePassword(currentPassword, newPassword, router, setError); // ✅ Kirim setError ke context
+    } catch (error) {
+      console.error("Error changing password:", error);
     }
-
-    const updatedUser = {
-      ...user,
-      password: newPassword,
-    };
-
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    alert("Password berhasil diubah!");
   };
-
-  if (!user) {
-    return <p>Memuat data...</p>;
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className="text-lg font-semibold mb-4">🔒 Ubah Password</h2>
 
-      {/* Password Lama */}
+      {/* Tampilkan pesan error */}
+      {error && (
+        <div className="text-red-500 mb-4">
+          {error}
+        </div>
+      )}
+
       <div>
-        <label className="block mb-1 font-medium">Password Lama</label>
+        <label>Password Lama</label>
         <input
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          placeholder="Masukkan Password Lama"
           className="w-full p-2 border rounded-md"
         />
       </div>
 
-      {/* Password Baru */}
       <div>
-        <label className="block mb-1 font-medium">Password Baru</label>
+        <label>Password Baru</label>
         <input
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="Masukkan Password Baru"
           className="w-full p-2 border rounded-md"
         />
       </div>
 
-      {/* Konfirmasi Password */}
       <div>
-        <label className="block mb-1 font-medium">Konfirmasi Password Baru</label>
+        <label>Konfirmasi Password Baru</label>
         <input
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Ulangi Password Baru"
           className="w-full p-2 border rounded-md"
         />
       </div>
 
-      {/* Tombol Simpan */}
       <button
         type="submit"
         className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"

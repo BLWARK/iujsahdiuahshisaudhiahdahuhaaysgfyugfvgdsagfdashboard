@@ -1,23 +1,25 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { AiOutlineEdit, AiOutlineClose } from "react-icons/ai";
 import { useBackend } from "@/context/BackContext";
 
 const EditProfileForm = () => {
   const { user, updateProfile, uploadImage } = useBackend();
-  const [nickname, setNickname] = useState("");
+  const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [avatar, setAvatar] = useState("/default-avatar.png");
+  const [avatar, setAvatar] = useState("/default.jpg");
   const [avatarFile, setAvatarFile] = useState(null);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
 
   // Saat user berubah, set field form sesuai data user
   useEffect(() => {
     if (user) {
-      setNickname(user.nickname || "");
+      setUsername(user.username || "");
       setPhone(user.phone || "");
       setAddress(user.address || "");
-      setAvatar(user.photo || "/default-avatar.png");
+      setAvatar(user.avatar || "/default.jpg");
     }
   }, [user]);
 
@@ -34,12 +36,11 @@ const EditProfileForm = () => {
   // Handle submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let photoUrl = avatar;
+    let avatarUrl = avatar;
 
     if (avatarFile) {
       try {
-        // Upload avatar menggunakan fungsi uploadImage dari context
-        photoUrl = await uploadImage(avatarFile);
+        avatarUrl = await uploadImage(avatarFile);
       } catch (error) {
         console.error("Gagal mengupload avatar:", error);
         alert("Gagal mengupload avatar.");
@@ -49,15 +50,16 @@ const EditProfileForm = () => {
 
     const updatedUser = {
       ...user,
-      nickname,
+      username, // Gunakan nilai dari field username (baru jika diedit)
       phone,
       address,
-      photo: photoUrl,
+      avatar: avatarUrl,
     };
 
     try {
       await updateProfile(updatedUser);
       alert("Profil berhasil diperbarui!");
+      setIsEditingUsername(false); // Nonaktifkan mode edit setelah berhasil
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Terjadi kesalahan saat memperbarui profil.");
@@ -92,17 +94,46 @@ const EditProfileForm = () => {
         </div>
       </div>
 
-      {/* Nickname */}
+      {/* Username */}
       <div>
-        <label className="block mb-1 font-semibold text-main">
-          Nickname
-        </label>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="font-semibold text-main whitespace-nowrap">
+            Username
+          </label>
+          {isEditingUsername ? (
+            <button
+              type="button"
+              onClick={() => setIsEditingUsername(false)}
+              title="Batal Edit"
+              className="text-red-500"
+            >
+              
+              <AiOutlineClose size={20} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditingUsername(true)}
+              title="Edit Username"
+              className="text-blue-500 flex justify-center items-center gap-2 underline"
+            >
+             
+              <AiOutlineEdit size={20} />
+              Edit
+            </button>
+          )}
+        </div>
         <input
           type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          placeholder="Masukkan Nickname"
-          className="w-full p-2 border rounded-md"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Masukkan Username"
+          className={`w-full p-2 border rounded-md ${
+            isEditingUsername
+              ? ""
+              : "bg-gray-100 cursor-not-allowed text-gray-400"
+          }`}
+          disabled={!isEditingUsername}
         />
       </div>
 
@@ -119,9 +150,7 @@ const EditProfileForm = () => {
 
       {/* Nomor HP */}
       <div>
-        <label className="block mb-1 font-semibold text-main">
-          Nomor HP
-        </label>
+        <label className="block mb-1 font-semibold text-main">Nomor HP</label>
         <input
           type="text"
           value={phone}
@@ -133,9 +162,7 @@ const EditProfileForm = () => {
 
       {/* Alamat */}
       <div>
-        <label className="block mb-1 font-semibold text-main">
-          Alamat
-        </label>
+        <label className="block mb-1 font-semibold text-main">Alamat</label>
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}

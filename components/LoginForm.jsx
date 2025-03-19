@@ -12,21 +12,31 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+  
+    // ✅ Validasi input sebelum hit API
     if (!email || !password) {
       setError("Email dan Password harus diisi!");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      await login(email, password);
+      const response = await login(email, password);
+  
+      if (!response?.token) {
+        // ✅ Jika gagal dari response backend → tampilkan pesan dari backend atau default
+        setError(response?.message || "Login gagal, periksa kembali email dan password!");
+        setPassword(""); // Kosongkan hanya password
+      }
     } catch (err) {
-      setError("Login gagal, periksa kembali email dan password!");
+      // ✅ Tangkap error dari jaringan atau koneksi
+      setError("Login gagal! Periksa koneksi internet atau coba lagi nanti.");
+    } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

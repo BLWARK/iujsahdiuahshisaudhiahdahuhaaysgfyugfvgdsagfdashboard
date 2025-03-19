@@ -10,7 +10,7 @@ const ArticleReviewPage = () => {
   const handleApprove = (id) => {
     setReviewArticles((prev) =>
       prev.map((article) =>
-        article.id === id ? { ...article, status: "Published" } : article
+        article.id === id ? { ...article, status: "publish" } : article
       )
     );
     alert(`Artikel dengan ID ${id} telah disetujui.`);

@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { customPost, customGet, customPut } from "../hooks/customAxios";
 
 export const BackContext = createContext();
@@ -91,41 +92,35 @@ export const BackProvider = ({ children }) => {
   }, [router]);
 
   // ✅ Fungsi untuk mengambil artikel berdasarkan platform_id
-  const getArticles = async (platformId) => {
-    if (!platformId) {
-      console.warn("⚠️ getArticles() dipanggil tanpa platformId");
-      return;
-    }
+  // Di BackProvider
+  const getArticles = useCallback(async (platformId, page = 1, limit = 10) => {
+    if (!platformId) return;
     try {
-      console.log(
-        "📡 Mengambil artikel dari API untuk platform_id:",
-        platformId
-      );
       const response = await customGet(
-        `/api/articles?platform_id=${platformId}`
+        `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}`
       );
-      setArticles(response.data); // Simpan artikel dari backend
+      setArticles(response.data);
+      return response;
     } catch (error) {
-      console.error("❌ Error fetching articles:", error);
+      console.error("Error fetching articles:", error);
+      throw error;
     }
-  };
+  }, []); // dependency kosong, jika tidak tergantung pada state lain
 
   const getDraftArticles = async () => {
     if (!selectedPortal?.platform_id || !user?.user_id) {
-     
       return;
     }
 
     try {
       const response = await customGet(
-        `/api/articles?status=draft&platform_id=${selectedPortal.platform_id}&user_id=${user.user_id}`
+        `/api/articles?status=draft&platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}`
       );
       setArticles(response.data); // Simpan artikel dari backend
     } catch (error) {
       console.error("❌ Error fetching draft articles:", error);
     }
   };
-  
 
   // ✅ Update selected platform dan simpan di localStorage
   const updatePlatform = (platform) => {
@@ -156,7 +151,7 @@ export const BackProvider = ({ children }) => {
   //   return () => {
   //     window.removeEventListener("beforeunload", handleUnload);
   //   };
-  // }, []);  
+  // }, []);
 
   // ✅ Fungsi untuk update state artikel
   const updateArticleData = (field, value) => {
@@ -166,37 +161,44 @@ export const BackProvider = ({ children }) => {
     }));
   };
 
-  // ✅ Fungsi Login dengan sesi 8 jam
-  const login = async (email, password) => {
-    try {
-      const response = await customPost("/api/login", { email, password });
+ // ✅ Fungsi Login dengan sesi 8 jam
+ const login = async (email, password) => {
+  try {
+    const response = await customPost("/api/login", { email, password });
 
-      if (response.token) {
-        const expiresAt = new Date().getTime() + 8 * 60 * 60 * 1000; // 🔥 8 jam dari sekarang
+    if (response?.token) {
+      const expiresAt = new Date().getTime() + 8 * 60 * 60 * 1000; // 8 jam
 
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("platforms", JSON.stringify(response.platforms));
-        localStorage.setItem("expiresAt", expiresAt.toString()); // ✅ Simpan waktu kedaluwarsa
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("platforms", JSON.stringify(response.platforms));
+      localStorage.setItem("expiresAt", expiresAt.toString());
 
-        setToken(response.token);
-        setUser(response.user);
-        setRole(response.user.role || "Guest");
-        setPlatforms(response.platforms);
+      setToken(response.token);
+      setUser(response.user);
+      setRole(response.user.role || "Guest");
+      setPlatforms(response.platforms);
 
-        setArticleData((prev) => ({
-          ...prev,
-          author_id: response.user.user_id,
-          platform_id: response.platforms?.[0]?.platform_id || null,
-        }));
+      setArticleData((prev) => ({
+        ...prev,
+        author_id: response.user.user_id,
+        platform_id: response.platforms?.[0]?.platform_id || null,
+      }));
 
-        router.push("/select-portal");
-      }
-    } catch (error) {
-      console.error("❌ Login gagal:", error);
-      alert("Login gagal! Periksa kembali email dan password.");
+      router.push("/select-portal");
+      return { success: true };
+    } else {
+      // ✅ Jangan throw error → kasih response biasa
+      return { success: false, message: response?.message || "Login gagal!" };
     }
-  };
+  } catch (error) {
+    // ✅ Jangan console.error → cukup kasih respons biasa
+    return { success: false, message: "Login gagal!" };
+  }
+};
+
+
+
 
   // ✅ Fungsi untuk menyimpan draft artikel
   const saveDraft = async () => {
@@ -215,26 +217,27 @@ export const BackProvider = ({ children }) => {
 
   // ✅ Fungsi untuk submit artikel dengan upload gambar dan update
   const submitArticle = async () => {
-
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     const userId = user?.user_id || storedUser?.user_id || null;
     // Ambil platform_id dari selectedPortal, pastikan sudah valid
     const platformId = selectedPortal?.platform_id;
-  
+
     if (!platformId || !userId) {
-      alert("❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel.");
+      alert(
+        "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
+      );
       return;
     }
-  
+
     // Pastikan platform_id adalah integer antara 0 dan 9
     const platformIdInt = parseInt(platformId, 10); // Ubah platform_id menjadi integer
     if (isNaN(platformIdInt) || platformIdInt < 0 || platformIdInt > 9) {
       alert("❌ Platform ID harus berupa angka valid antara 0 dan 9.");
       return;
     }
-  
+
     const { imageFile, ...articleWithoutImage } = articleData || {}; // Pisahkan imageFile dari data artikel
-  
+
     // Jika ada gambar, upload gambar terlebih dahulu
     let imageUrl = null;
     if (imageFile) {
@@ -244,7 +247,7 @@ export const BackProvider = ({ children }) => {
         console.error("Gagal mengupload gambar:", error);
       }
     }
-  
+
     try {
       const payload = {
         ...articleWithoutImage,
@@ -253,31 +256,30 @@ export const BackProvider = ({ children }) => {
         image: imageUrl || "", // Sertakan URL gambar jika ada
         status: "Pending",
       };
-  
+
       const response = await customPost("/api/articles", payload);
-  
+
       const articleId = response?.article_id || response?._id;
-  
+
       if (!articleId) {
         throw new Error("Gagal mendapatkan article_id.");
       }
-  
+
       console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
-  
+
       return articleId;
     } catch (error) {
       console.error("Error submitting article:", error);
       throw new Error("Gagal mengirim artikel.");
     }
   };
-  
-  
+
   // Fungsi untuk upload gambar
   const uploadImage = async (imageFile) => {
     try {
       const formData = new FormData();
       formData.append("image", imageFile);
-      
+
       const response = await customPost("/api/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -297,19 +299,20 @@ export const BackProvider = ({ children }) => {
     }
   };
 
-  
   // Fungsi untuk approve artikel
   const approveArticle = async (articleId) => {
     try {
       const response = await customPut(`/api/articles/${articleId}`, {
-        article_id: articleId,  // Kirimkan article_id ke backend
+        article_id: articleId, // Kirimkan article_id ke backend
         status: "Publish", // Status yang ingin diubah
       });
-  
+
       console.log("Response:", response); // Log response dari backend
-  
+
       if (response?.article_id) {
-        console.log(`Artikel dengan ID ${articleId} telah disetujui dan dipublikasikan.`);
+        console.log(
+          `Artikel dengan ID ${articleId} telah disetujui dan dipublikasikan.`
+        );
         setArticles((prevArticles) =>
           prevArticles.map((article) =>
             article.article_id === articleId
@@ -326,21 +329,71 @@ export const BackProvider = ({ children }) => {
     }
   };
 
-
   // Tambahkan fungsi updateProfile
-const updateProfile = async (updatedUser) => {
-  try {
-    const response = await customPut("/api/users", updatedUser);
-    // Misal API mengembalikan data user yang sudah diperbarui
-    const newProfile = response.data || response;
-    setUser(newProfile);
-    localStorage.setItem("currentUser", JSON.stringify(newProfile));
-    return newProfile;
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    throw error;
-  }
-};
+  const updateProfile = async (updatedUser) => {
+    try {
+      // Menggunakan updatedUser.user_id sebagai bagian dari URL
+      const response = await customPut(
+        `/api/users/${updatedUser.user_id}`,
+        updatedUser
+      );
+      // Misal API mengembalikan data user yang sudah diperbarui
+      const newProfile = response.data || response;
+      setUser(newProfile);
+      localStorage.setItem("currentUser", JSON.stringify(newProfile));
+      return newProfile;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  };
+
+  const changePassword = async (old_password, password, router, setError) => {
+    try {
+      const payload = {
+        old_password,
+        password,
+      };
+  
+      // Kirim request PUT ke endpoint `/api/users/{userId}`
+      const response = await customPut(`/api/users/${user.user_id}`, payload);
+  
+      if (response?.success || response?.updatedUser || response?.message === "User updated successfully") {
+        const updatedUser = response.updatedUser;
+        setUser(updatedUser);
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+  
+        // ✅ Jika berhasil, redirect ke halaman login
+        alert("✅ Password berhasil diubah! Silakan login kembali.");
+        setUser(null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("currentUser");
+        router.push("/login");
+      } else {
+        // ✅ Jika respons gagal dan pesan dari backend adalah "Old password is incorrect"
+        if (response.message === "Old password is incorrect") {
+          setError("❌ Password lama salah! Silakan coba lagi."); // ✅ Pakai setError dari parameter
+          return;
+        }
+  
+        // ✅ Jika pesan error lain, abaikan saja
+        setError(response.message || "❌ Terjadi kesalahan saat mengubah password.");
+        return;
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message;
+  
+      // ✅ Tampilkan pesan hanya jika password lama salah
+      if (errorMessage === "Old password is incorrect") {
+        setError("❌ Password lama salah! Silakan coba lagi."); // ✅ Pakai setError dari parameter
+        return;
+      }
+  
+      // ✅ Abaikan semua pesan error lain (tidak ada console atau alert)
+      return;
+    }
+  };
+  
   
   
   
@@ -383,8 +436,18 @@ const updateProfile = async (updatedUser) => {
       logout,
       approveArticle, // Menambahkan fungsi approveArticle
       updateProfile, // <-- fungsi updateProfile ditambahkan di sini
+      changePassword, // <-- fungsi baru ditambahkan di sini
     }),
-    [user, role, token, platforms, articleData, articles, selectedPortal, isSuccessPopup]
+    [
+      user,
+      role,
+      token,
+      platforms,
+      articleData,
+      articles,
+      selectedPortal,
+      isSuccessPopup,
+    ]
   );
 
   return (

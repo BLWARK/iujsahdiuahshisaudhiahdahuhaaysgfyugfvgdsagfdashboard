@@ -18,14 +18,14 @@ const UserProfile = () => {
   return (
     <div className="flex items-center gap-4">
       <Image
-        src={user.photo || "/default.jpg" } // Gunakan foto jika ada
+        src={user.avatar || "/default.jpg" } // Gunakan foto jika ada
         alt="User Photo"
         width={50}
         height={50}
         className="rounded-full object-cover"
       />
       <div>
-        <p className="font-semibold">{user.fullname || user.username}</p> {/* Ambil fullname, jika kosong pakai username */}
+        <p className="font-semibold">{user.username}</p> {/* Ambil fullname, jika kosong pakai username */}
         <p className="text-xs text-gray-300">Role: {user.role}</p> {/* Role dari backend */}
       </div>
     </div>

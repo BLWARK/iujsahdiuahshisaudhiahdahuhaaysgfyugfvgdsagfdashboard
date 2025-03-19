@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FiMenu } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import users from "@/data/users";
-import Notification from "@/components/notification/Notification";
+// import Notification from "@/components/notification/Notification";
 import UserProfile from "./UserProfile";
 import PortalSelector from "./PortalSelector";
 import SettingsDropdown from "./SettingsDropdown";
@@ -18,7 +18,7 @@ const Navbar = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       const detailedUser = users.find((u) => u.id === storedUser.id);
       setUser(detailedUser || storedUser);
@@ -60,7 +60,7 @@ const Navbar = () => {
             setSelectedPortal={setSelectedPortal}
             onPortalChange={handlePortalChange}
           />
-          <Notification user={user} />
+          {/* <Notification user={user} /> */}
           <SettingsDropdown />
         </div>
       </div>
