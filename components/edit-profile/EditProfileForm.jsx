@@ -3,9 +3,12 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { AiOutlineEdit, AiOutlineClose } from "react-icons/ai";
 import { useBackend } from "@/context/BackContext";
+import NotifHeadEditor from "@/components/NotifHeadEditor"; // ✅ Import komponen notifikasi
 
 const EditProfileForm = () => {
   const { user, updateProfile, uploadImage } = useBackend();
+
+  // ✅ State untuk data user
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -13,7 +16,10 @@ const EditProfileForm = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
 
-  // Saat user berubah, set field form sesuai data user
+  // ✅ State untuk notifikasi
+  const [notification, setNotification] = useState(null);
+
+  // ✅ Saat user berubah, set field form sesuai data user
   useEffect(() => {
     if (user) {
       setUsername(user.username || "");
@@ -23,34 +29,39 @@ const EditProfileForm = () => {
     }
   }, [user]);
 
-  // Handle perubahan avatar
-  const handleAvatarChange = (e) => {
+  // ✅ Handle perubahan avatar (TIDAK LANGSUNG UPLOAD)
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAvatarFile(file);
+      setAvatarFile(file); // ✅ Simpan file di state (BELUM di-upload)
       const newAvatar = URL.createObjectURL(file);
       setAvatar(newAvatar);
     }
   };
 
-  // Handle submit form
+  // ✅ Handle submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     let avatarUrl = avatar;
 
+    // ✅ Upload gambar HANYA JIKA ADA FILE BARU
     if (avatarFile) {
       try {
-        avatarUrl = await uploadImage(avatarFile);
+        avatarUrl = await uploadImage(avatarFile); // ✅ Upload gambar
       } catch (error) {
-        console.error("Gagal mengupload avatar:", error);
-        alert("Gagal mengupload avatar.");
+        console.error("❌ Gagal mengupload avatar:", error);
+        setNotification({
+          type: "error",
+          message: "❌ Gagal mengupload avatar!",
+        });
         return;
       }
     }
 
     const updatedUser = {
       ...user,
-      username, // Gunakan nilai dari field username (baru jika diedit)
+      username,
       phone,
       address,
       avatar: avatarUrl,
@@ -58,12 +69,30 @@ const EditProfileForm = () => {
 
     try {
       await updateProfile(updatedUser);
-      alert("Profil berhasil diperbarui!");
-      setIsEditingUsername(false); // Nonaktifkan mode edit setelah berhasil
+
+      // ✅ Munculkan notifikasi sukses
+      setNotification({
+        type: "success",
+        message: "✅ Profil berhasil diperbarui!",
+      });
+
+      // ✅ Nonaktifkan mode edit username
+      setIsEditingUsername(false);
     } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Terjadi kesalahan saat memperbarui profil.");
+      console.error("❌ Error updating profile:", error);
+
+      // ✅ Munculkan notifikasi error
+      setNotification({
+        type: "error",
+        message: "❌ Terjadi kesalahan saat memperbarui profil!",
+      });
     }
+  };
+
+  // ✅ Fungsi untuk menutup popup notifikasi dan refresh halaman
+  const handleCloseNotification = () => {
+    setNotification(null);
+     // ✅ Refresh halaman setelah menutup popup
   };
 
   if (!user) {
@@ -72,7 +101,7 @@ const EditProfileForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Avatar */}
+      {/* ✅ Avatar */}
       <div>
         <h2 className="text-lg font-semibold mb-2">Ubah Avatar</h2>
         <div className="flex items-center gap-4">
@@ -81,8 +110,7 @@ const EditProfileForm = () => {
               src={avatar}
               alt="Avatar"
               fill
-              objectFit="cover"
-              className="rounded-full border border-gray-300"
+              className="rounded-full border border-gray-300 object-cover"
             />
           </div>
           <input
@@ -94,7 +122,7 @@ const EditProfileForm = () => {
         </div>
       </div>
 
-      {/* Username */}
+      {/* ✅ Username */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <label className="font-semibold text-main whitespace-nowrap">
@@ -104,20 +132,16 @@ const EditProfileForm = () => {
             <button
               type="button"
               onClick={() => setIsEditingUsername(false)}
-              title="Batal Edit"
               className="text-red-500"
             >
-              
               <AiOutlineClose size={20} />
             </button>
           ) : (
             <button
               type="button"
               onClick={() => setIsEditingUsername(true)}
-              title="Edit Username"
               className="text-blue-500 flex justify-center items-center gap-2 underline"
             >
-             
               <AiOutlineEdit size={20} />
               Edit
             </button>
@@ -127,17 +151,16 @@ const EditProfileForm = () => {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Masukkan Username"
+          disabled={!isEditingUsername}
           className={`w-full p-2 border rounded-md ${
             isEditingUsername
               ? ""
               : "bg-gray-100 cursor-not-allowed text-gray-400"
           }`}
-          disabled={!isEditingUsername}
         />
       </div>
 
-      {/* Email (Terkunci) */}
+      {/* ✅ Email */}
       <div>
         <label className="block mb-1 font-semibold text-main">Email</label>
         <input
@@ -148,37 +171,44 @@ const EditProfileForm = () => {
         />
       </div>
 
-      {/* Nomor HP */}
+      {/* ✅ Nomor HP */}
       <div>
         <label className="block mb-1 font-semibold text-main">Nomor HP</label>
         <input
           type="text"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="Masukkan Nomor HP"
           className="w-full p-2 border rounded-md"
         />
       </div>
 
-      {/* Alamat */}
+      {/* ✅ Alamat */}
       <div>
         <label className="block mb-1 font-semibold text-main">Alamat</label>
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Masukkan Alamat"
-          rows="3"
           className="w-full p-2 border rounded-md"
-        ></textarea>
+          rows="3"
+        />
       </div>
 
-      {/* Tombol Simpan */}
+      {/* ✅ Tombol Simpan */}
       <button
         type="submit"
         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
       >
         Simpan Perubahan
       </button>
+
+      {/* ✅ Komponen Notifikasi */}
+      {notification?.message && (
+        <NotifHeadEditor
+          type={notification.type}
+          message={notification.message}
+          onClose={handleCloseNotification}
+        />
+      )}
     </form>
   );
 };

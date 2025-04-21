@@ -1,32 +1,26 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
+import { useBackend } from "@/context/BackContext"; // ✅ Pakai useBackend
 
 const UserProfile = () => {
-  const [user, setUser] = useState(null);
+  const { user } = useBackend(); // ✅ Ambil langsung dari context
 
-  useEffect(() => {
-    // ✅ Ambil user dari localStorage
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setUser(storedUser);
-    }
-  }, []);
-
-  if (!user) return null; // Jika belum ada user, jangan tampilkan apapun
+  if (!user) return null;
 
   return (
     <div className="flex items-center gap-4">
+      <div className="relative w-16 h-16">
       <Image
-        src={user.avatar || "/default.jpg" } // Gunakan foto jika ada
+        src={user.avatar || "/default.jpg"}
         alt="User Photo"
-        width={50}
-        height={50}
+        fill
         className="rounded-full object-cover"
       />
+      </div>
       <div>
-        <p className="font-semibold">{user.username}</p> {/* Ambil fullname, jika kosong pakai username */}
-        <p className="text-xs text-gray-300">Role: {user.role}</p> {/* Role dari backend */}
+        <p className="font-semibold">{user.username}</p> {/* ✅ Pakai username terbaru */}
+        <p className="text-xs text-gray-300">Role: {user.role}</p> {/* ✅ Role dari backend */}
       </div>
     </div>
   );

@@ -1,25 +1,36 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { AiOutlineSave, AiOutlineSend, AiOutlineCloseCircle } from "react-icons/ai";
+
+import {
+  AiOutlineSave,
+  AiOutlineSend,
+} from "react-icons/ai";
 import { useBackend } from "@/context/BackContext";
 import ArticleEditor from "@/components/ArticleEditor";
-import { usePortal } from "@/context/PortalContext";
 import { DateTime } from "luxon";
 import SuccessPopup from "@/components/SuccessPopup"; // ✅ Import Popup
+import Swal from "sweetalert2";
+
 
 const TambahArtikel = () => {
-  const { categories } = usePortal();
   const {
     articleData,
     updateArticleData,
     saveDraft,
     submitArticle,
     selectedPortal,
+    getCategoriesByPlatformId,
+    
   } = useBackend();
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [isSuccessPopupOpen, setSuccessPopupOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
+
+  
+ 
   // ✅ Pastikan `platform_id` terupdate dari `selectedPortal`
   useEffect(() => {
     if (selectedPortal?.platform_id) {
@@ -35,7 +46,7 @@ const TambahArtikel = () => {
     const file = e.target.files[0];
     if (file) {
       updateArticleData("imageFile", file); // ✅ Simpan File asli untuk upload
-  
+
       const reader = new FileReader();
       reader.onloadend = () => {
         updateArticleData("image", reader.result); // ✅ Simpan URL base64 untuk preview
@@ -43,9 +54,23 @@ const TambahArtikel = () => {
       reader.readAsDataURL(file);
     }
   };
-  
-   // ✅ Fungsi untuk menghapus gambar
-   const handleRemoveImage = () => {
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (selectedPortal?.platform_id) {
+        console.log("✅ Fetching categories by platform_id...");
+        const fetchedCategories = await getCategoriesByPlatformId(
+          selectedPortal.platform_id
+        );
+        setCategories(fetchedCategories);
+      }
+    };
+
+    fetchCategories();
+  }, [selectedPortal?.platform_id]);
+
+  // ✅ Fungsi untuk menghapus gambar
+  const handleRemoveImage = () => {
     updateArticleData("image", ""); // Hapus URL gambar
     updateArticleData("imageFile", null); // Hapus file gambar
   };
@@ -84,17 +109,57 @@ const TambahArtikel = () => {
     updateArticleData("scheduled_at", formattedISO);
   };
 
-  const now = DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm");
+  const [now, setNow] = useState("");
 
+  useEffect(() => {
+    const current = DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm");
+    setNow(current);
+  }, []);
+  
   // ✅ Pastikan platform_id ada sebelum submit
   const handleSubmitArticle = async () => {
-    if (!articleData.platform_id) {
-      alert("❗ Pilih portal terlebih dahulu sebelum mengirim artikel.");
+    const {
+      title,
+      content,
+      image,
+      slug,
+      meta_title,
+      tags,
+      // category,
+      platform_id,
+    } = articleData;
+  
+    // ✅ Cek semua field yang harus diisi
+    if (
+      !title ||
+      !content ||
+      !image ||
+      !slug ||
+      !meta_title ||
+      !tags ||
+      // !category?.length ||
+      !platform_id
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Oops...",
+        text: "Semua field wajib diisi sebelum mengirim artikel!",
+      });
       return;
     }
-    await submitArticle();
-    setSuccessPopupOpen(true); // ✅ Tampilkan popup setelah sukses submit
+  
+    try {
+      await submitArticle();
+      setSuccessPopupOpen(true); // ✅ Show popup kalau berhasil
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Submit",
+        text: err.message || "Terjadi kesalahan saat mengirim artikel.",
+      });
+    }
   };
+  
 
   const handleClosePopup = () => {
     setSuccessPopupOpen(false);
@@ -129,7 +194,6 @@ const TambahArtikel = () => {
           <div className="border border-gray-300 rounded-md p-4">
             <div className="h-72 border-dashed border-2 border-gray-400 rounded-md flex justify-center items-center mb-4">
               {articleData.image ? (
-              
                 <img
                   src={
                     typeof articleData.image === "string"
@@ -139,8 +203,6 @@ const TambahArtikel = () => {
                   alt="Preview"
                   className="h-full w-full object-contain rounded-md"
                 />
-                 
-                 
               ) : (
                 <label className="cursor-pointer">
                   <span className="text-gray-500">
@@ -156,14 +218,14 @@ const TambahArtikel = () => {
               )}
             </div>
 
-             {/* 🔥 Tombol Hapus Gambar */}
-                  
-             <button
-                    onClick={handleRemoveImage}
-                    className=" top-2 right-2 bg-red-500 text-white p-3 mb-6 rounded-lg hover:bg-red-700"
-                  >
-                  Delete Images
-                  </button>
+            {/* 🔥 Tombol Hapus Gambar */}
+
+            <button
+              onClick={handleRemoveImage}
+              className=" top-2 right-2 bg-red-500 text-white p-3 mb-6 rounded-lg hover:bg-red-700"
+            >
+              Delete Images
+            </button>
 
             {/* ✅ Tampilkan Nama File Gambar Jika Ada */}
             {articleData.image && typeof articleData.image !== "string" && (
@@ -218,24 +280,26 @@ const TambahArtikel = () => {
               <label key={category.id} className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={
-                    Array.isArray(articleData.category) &&
-                    articleData.category.includes(category.id)
-                  }
+                  checked={articleData.category?.includes(
+                    category.category_name
+                  )}
                   onChange={() => {
-                    const updatedCategories = Array.isArray(
-                      articleData.category
+                    const updatedCategories = articleData.category?.includes(
+                      category.category_name
                     )
-                      ? articleData.category.includes(category.id)
-                        ? articleData.category.filter((c) => c !== category.id)
-                        : [...articleData.category, category.id]
-                      : [category.id];
+                      ? articleData.category.filter(
+                          (c) => c !== category.category_name
+                        )
+                      : [
+                          ...(articleData.category || []),
+                          category.category_name,
+                        ];
 
                     updateArticleData("category", updatedCategories);
                   }}
                   className="w-4 h-4"
                 />
-                {category.name}
+                {category.category_name}
               </label>
             ))}
           </div>
@@ -261,7 +325,7 @@ const TambahArtikel = () => {
           />
         </div>
 
-          {/* Tags */}
+        {/* Tags */}
         <div>
           <label className="block mb-2 mt-4 font-medium">Tags:</label>
           <input

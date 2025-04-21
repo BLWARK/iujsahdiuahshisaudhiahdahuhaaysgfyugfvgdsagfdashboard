@@ -65,7 +65,7 @@ const PortalSelector = () => {
   const handleSelectPortal = (portal) => {
     console.log("🌍 Portal dipilih:", portal);
     updatePlatform(portal); // 🔥 Perbarui portal di BackContext
-    getArticles(portal.platform_id); // 🔥 Langsung panggil API setelah memilih portal
+    // getArticles(portal.platform_id); // 🔥 Langsung panggil API setelah memilih portal
     setIsDropdownOpen(false);
   };
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -10,16 +10,19 @@ import { LuNotebookPen } from "react-icons/lu";
 import { PiSealPercent } from "react-icons/pi";
 import { GrUserSettings } from "react-icons/gr";
 import { useBackend } from "@/context/BackContext"; // ✅ Ambil data user dari backend
-import { draftArticles } from "@/data/draftArticlesData";
 import { rolePermissions } from "@/data/rolePermissions";
 import { pendingAdsData } from "@/data/pendingAdsData";
 import SidebarSubMenu from "./SidebarSubMenu";
 import UserProfile from "../navigation/UserProfile";
 
+
+
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
-  const { user, role } = useBackend(); // ✅ Ambil user & role dari BackContext
   const [openSubMenu, setOpenSubMenu] = useState({});
+  const { user, role, } = useBackend();
+
+ 
 
   const toggleSubMenu = (key) => {
     setOpenSubMenu((prev) => ({
@@ -47,7 +50,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       feature: "post-management",
       children: [
         { name: "Kelola Artikel", href: "/dashboard/post-management/kelola-artikel" },
-        { name: `Draft (${draftArticles.length})`, href: "/dashboard/post-management/draft" },
+        { name: `Draft`, href: "/dashboard/post-management/draft" },
         { name: "Recycle Bin", href: "/dashboard/post-management/recyclebin" },
       ],
     },
@@ -58,8 +61,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       feature: "content-management",
       children: [
         { name: "Headline Utama", href: "/dashboard/content-management/headline-utama" },
+        { name: "Headline Category", href: "/dashboard/content-management/headline-category" },
         { name: "Pilihan Editor", href: "/dashboard/content-management/pilihan-editor" },
-        { name: "Berita Popular", href: "/dashboard/content-management/berita-populer" },
+        ,
       ],
     },
     ...(role === "Master" || role === "Super Admin" || role === "Editor"
@@ -84,9 +88,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               { name: "Advertising", href: "/dashboard/marketing/advertising" },
               { name: "Press Release", href: "/dashboard/marketing/press-release" },
               { name: "Event", href: "/dashboard/marketing/event" },
-              {
-                name: `Pending Ads (${pendingAdsData.filter((ad) => ad.status === "Pending").length})`,
-                href: "/dashboard/marketing/pending-ads",
+              { name: `Pending Ads (${pendingAdsData.filter((ad) => ad.status === "Pending").length})`, href: "/dashboard/marketing/pending-ads",
               },
             ],
           },

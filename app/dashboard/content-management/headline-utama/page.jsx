@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   FaArrowUp,
@@ -10,62 +10,127 @@ import {
 import { useBackend } from "@/context/BackContext";
 import ArticlePopup from "@/components/ArticlePopup";
 import ArticleList from "@/components/ArticleList";
+import NotifHeadEditor from "@/components/NotifHeadEditor";
+import ArticleListSkeleton from "@/components/ArticleListSkeleton";
+
 
 const HeadlinePage = () => {
-  const { selectedPortal, articles, getArticles } = useBackend();
+  const { selectedPortal, articles, getArticles, saveHeadlines, getHeadlines } =
+    useBackend();
+
   const [headlines, setHeadlines] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [currentReplaceIndex, setCurrentReplaceIndex] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [prevPlatformId, setPrevPlatformId] = useState(null);
+  const [notification, setNotification] = useState(null);
 
-  // Pagination states
+  // ✅ State loading terpisah
+  const [isLoadingHeadlines, setIsLoadingHeadlines] = useState(true);
+  const [isLoadingArticles, setIsLoadingArticles] = useState(true);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [meta, setMeta] = useState(null);
-  const articlesPerPage = 10; // Misal limit yang diminta backend
 
-  // Ambil artikel berdasarkan platform_id dan halaman yang dipilih
+  const articlesPerPage = 10;
+  const hasFetched = useRef(false);
+
+  // ✅ Fetch Headline hanya saat platform_id berubah (TIDAK TERPENGARUH Pagination)
+  useEffect(() => {
+    const fetchHeadlines = async () => {
+      if (!selectedPortal?.platform_id || hasFetched.current) return;
+
+      setIsLoadingHeadlines(true);
+
+      try {
+        console.log("✅ Fetching headlines...");
+        const headlineData = await getHeadlines(selectedPortal.platform_id);
+
+        const mappedHeadlines = headlineData.map((item) => ({
+          position: item.position,
+          article_id: item.article?.article_id || item.article_id,
+          title: item.article?.title || "No Title",
+          image: item.article?.image || "/placeholder-image.jpg",
+          date: item.article?.date || "-",
+          author: item.article?.author?.fullname || "Unknown Author",
+          authorAvatar: item.article?.author?.avatar || "/default-avatar.png",
+        }))
+        .sort((a, b) => a.position - b.position);
+
+        setHeadlines(mappedHeadlines);
+        hasFetched.current = true;
+      } catch (error) {
+        console.error("❌ Error fetching headlines:", error);
+      } finally {
+        setIsLoadingHeadlines(false);
+      }
+    };
+
+    fetchHeadlines();
+  }, [selectedPortal?.platform_id, getHeadlines]); // ✅ TANPA `currentPage`!
+
+  // ✅ Fetch Articles hanya saat currentPage berubah (TIDAK TERPENGARUH Kolom Headline)
   useEffect(() => {
     if (!selectedPortal?.platform_id) return;
-    setIsLoading(true);
-    getArticles(selectedPortal.platform_id, currentPage, articlesPerPage)
-      .then((response) => {
-        setMeta(response.meta);
-        setPrevPlatformId(selectedPortal.platform_id);
-      })
-      .finally(() => setIsLoading(false));
-  }, [selectedPortal, currentPage, getArticles]);
 
-  // Filter artikel berdasarkan selectedPortal.platform_id
+    const fetchArticles = async () => {
+      setIsLoadingArticles(true);
+
+      try {
+        console.log("✅ Fetching articles...");
+        const response = await getArticles(
+          selectedPortal.platform_id,
+          currentPage,
+          articlesPerPage
+        );
+
+        setMeta(response?.meta || {});
+      } catch (error) {
+        console.error("❌ Error fetching articles:", error);
+      } finally {
+        setIsLoadingArticles(false);
+      }
+    };
+
+    fetchArticles();
+  }, [selectedPortal?.platform_id, currentPage, getArticles]); // ✅ currentPage jadi trigger!
+
+  // ✅ Jika platform berubah, reset ref agar fetch bisa dipanggil ulang
+  useEffect(() => {
+    if (selectedPortal?.platform_id) {
+      hasFetched.current = false;
+    }
+  }, [selectedPortal?.platform_id]);
+
+  // ✅ Filter artikel berdasarkan selectedPortal.platform_id
   const filteredArticles = articles.filter(
     (article) => article.platform_id === selectedPortal?.platform_id
   );
 
-  // Sorting berdasarkan tanggal (descending: artikel terbaru di atas)
-  const sortedFilteredArticles = [...filteredArticles].sort((a, b) => {
-    return new Date(b.date) - new Date(a.date);
-  });
+  // ✅ Sorting berdasarkan tanggal (descending: artikel terbaru di atas)
+  const sortedFilteredArticles = [...filteredArticles].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
 
-  // Fungsi untuk menambahkan artikel ke daftar headlines (maksimal 5)
+  // ✅ Fungsi untuk menambahkan artikel ke daftar headlines (maksimal 5)
   const addToHeadlines = (article) => {
     setHeadlines((prevHeadlines) => {
       const isAlreadyAdded = prevHeadlines.some(
-        (item) =>
-          item._id === article._id || item.article_id === article.article_id
+        (item) => item.article_id === article.article_id
       );
       if (!isAlreadyAdded && prevHeadlines.length < 5) {
-        console.log("✅ Menambahkan artikel:", article.title);
         return [...prevHeadlines, article];
       }
-      console.log("❌ Artikel sudah ada atau limit 5 tercapai:", article.title);
       return prevHeadlines;
     });
   };
 
+  // ✅ Fungsi untuk menghapus headline
   const removeFromHeadlines = (id) => {
-    setHeadlines(headlines.filter((item) => item._id !== id && item.article_id !== id));
+    setHeadlines((prevHeadlines) =>
+      prevHeadlines.filter((item) => item.article_id !== id)
+    );
   };
 
+  // ✅ Pindahkan headline ke atas
   const moveUp = (index) => {
     if (index === 0) return;
     setHeadlines((prevHeadlines) => {
@@ -78,6 +143,7 @@ const HeadlinePage = () => {
     });
   };
 
+  // ✅ Pindahkan headline ke bawah
   const moveDown = (index) => {
     if (index === headlines.length - 1) return;
     setHeadlines((prevHeadlines) => {
@@ -90,26 +156,74 @@ const HeadlinePage = () => {
     });
   };
 
-  const openReplacePopup = (index) => {
-    setCurrentReplaceIndex(index);
-    setIsPopupOpen(true);
-  };
+    // ✅ Buka popup ganti headline → FIXED ✅
+    const openReplacePopup = (index) => {
+      setCurrentReplaceIndex(index);
+      setIsPopupOpen(true);
+    };
 
+      // ✅ Tutup popup
   const closeReplacePopup = () => {
     setIsPopupOpen(false);
     setCurrentReplaceIndex(null);
   };
 
+  // ✅ Ganti headline
   const replaceHeadline = (article) => {
     setHeadlines((prevHeadlines) => {
+      const isDuplicate = prevHeadlines.some(
+        (item) => item.article_id === article.article_id
+      );
+  
+      if (isDuplicate) {
+        setNotification({
+          type: "error",
+          message: `Artikel "${article.title}" sudah ada di daftar!`,
+        });
+        return prevHeadlines; // ❌ Jangan ubah state jika duplikat
+      }
+  
+      // ✅ Jika tidak duplikat → lanjutkan replace
       const updatedHeadlines = [...prevHeadlines];
       updatedHeadlines[currentReplaceIndex] = article;
       return updatedHeadlines;
     });
-    closeReplacePopup();
+  
+    setIsPopupOpen(false);
   };
+  
+  // ✅ Simpan headlines ke backend
+  const handleSaveHeadlines = async () => {
+    if (headlines.length === 0) {
+      setNotification({
+        type: "error",
+        message: "Tidak ada headline yang dipilih!",
+      });
+      return;
+    }
+  
+    try {
+      await saveHeadlines(headlines);
+      setNotification({
+        type: "success",
+        message: "Headline berhasil disimpan!",
+      });
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "❌ Error saat menyimpan headline!",
+      });
+    }
+  };
+  
 
-  // Pagination controls
+    // ✅ Fungsi untuk menutup popup notifikasi dan refresh halaman
+    const handleCloseNotification = () => {
+      setNotification(null);
+      window.location.reload(); // ✅ Refresh halaman setelah menutup popup
+    };
+
+  // ✅ Pagination
   const totalPages = meta ? meta.totalPages : 1;
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -122,19 +236,17 @@ const HeadlinePage = () => {
       {/* Headline Artikel */}
       <div className="border p-4 rounded-lg shadow-md bg-white">
         <h2 className="text-xl font-bold mb-4">
-          🏆 Headline Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
+          🏆 Headline Artikel -{" "}
+          {selectedPortal?.platform_name || "Pilih Portal"}
         </h2>
-        {isLoading ? (
-          <p className="text-center text-gray-500">Loading artikel...</p>
+
+        {isLoadingHeadlines ? (
+          <ArticleListSkeleton count={4} />
         ) : (
           <div className="grid grid-cols-4 gap-4">
             {headlines.map((headline, index) => (
               <div
-                key={
-                  headline._id ||
-                  headline.article_id ||
-                  `${headline.platform_id}-${index}`
-                }
+                key={headline.article_id}
                 className="border rounded-md p-4 shadow bg-white relative"
               >
                 <div className="relative w-full h-32">
@@ -171,7 +283,7 @@ const HeadlinePage = () => {
                       <FaExchangeAlt size={18} />
                     </button>
                     <button
-                      onClick={() => removeFromHeadlines(headline.id)}
+                      onClick={() => removeFromHeadlines(headline.article_id)}
                       className="text-red-500 hover:text-red-700"
                     >
                       <FaRegTrashAlt size={18} />
@@ -189,7 +301,7 @@ const HeadlinePage = () => {
         <h2 className="text-xl font-bold mb-4">
           📚 Pilih Berita - {selectedPortal?.platform_name || "Pilih Portal"}
         </h2>
-        {isLoading ? (
+        {isLoadingArticles ? (
           <p className="text-center text-gray-500">Loading artikel...</p>
         ) : (
           <>
@@ -220,15 +332,35 @@ const HeadlinePage = () => {
           </>
         )}
       </div>
+      <div className="mt-4">
+        <button
+          onClick={handleSaveHeadlines}
+          className="px-6 py-3 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-700"
+        >
+          Simpan
+        </button>
+      </div>
 
       {/* Popup Ganti Artikel */}
+      {/* ✅ Komponen Popup */}
       {isPopupOpen && (
         <ArticlePopup
           articles={sortedFilteredArticles}
-          onClose={closeReplacePopup}
+          meta={meta}
+          onClose={() => setIsPopupOpen(false)}
           onSelect={replaceHeadline}
+          onPageChange={handlePageChange} // ✅ Trigger parent → Fetch data baru
         />
       )}
+
+{notification?.message && (
+  <NotifHeadEditor
+    message={notification.message}
+    type={notification.type}
+    onClose={() => setNotification(null)}
+  />
+)}
+
     </div>
   );
 };

@@ -1,8 +1,9 @@
+"use client";
 import React, { useState } from "react";
 import RoleSelector from "@/components/RoleSelector";
 
 const UserTable = ({
-  users,
+  users = [],
   loggedInUserId,
   loggedInUserRole,
   onDelete,
@@ -11,14 +12,14 @@ const UserTable = ({
   onSave,
 }) => {
   const roleHierarchy = ["Master", "Super Admin", "Editor", "Contributor"];
+  const [hasChanges, setHasChanges] = useState(false);
 
+  // ✅ Filter user yang memiliki role di bawah login user
   const filteredUsers = users.filter(
     (user) =>
-      user.id !== loggedInUserId &&
+      user.user_id !== loggedInUserId &&
       roleHierarchy.indexOf(user.role) > roleHierarchy.indexOf(loggedInUserRole)
   );
-
-  const [hasChanges, setHasChanges] = useState(false);
 
   const handleRoleChange = (userId, newRole) => {
     onChangeRole(userId, newRole);
@@ -26,7 +27,7 @@ const UserTable = ({
   };
 
   const handleSuspend = (userId, currentStatus) => {
-    const newStatus = currentStatus === "Active" ? "Suspended" : "Active";
+    const newStatus = currentStatus === "active" ? "suspended" : "active";
     onSuspend(userId, newStatus);
     setHasChanges(true);
   };
@@ -37,43 +38,35 @@ const UserTable = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll ">
-      <table className="w-full text-left border-collapse ">
-        <colgroup>
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "25%" }} />
-          <col style={{ width: "25%" }} />
-          <col style={{ width: "20%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "15%" }} />
-        </colgroup>
+    <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
+      <table className="w-full text-left border-collapse min-w-[600px]">
         <thead>
           <tr>
-            <th className="border-b p-4">#</th>
-            <th className="border-b p-4">Nama</th>
-            <th className="border-b p-4">Email</th>
-            <th className="border-b p-4">Role</th>
-            <th className="border-b p-4">Status</th>
-            <th className="border-b p-4">Aksi</th>
+            <th className="border-b p-3">#</th>
+            <th className="border-b p-3">Nama</th>
+            <th className="border-b p-3">Email</th>
+            <th className="border-b p-3">Role</th>
+            <th className="border-b p-3">Status</th>
+            <th className="border-b p-3">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {filteredUsers.map((user, index) => (
-            <tr key={user.id} className="hover:bg-gray-50">
-              <td className="border-b p-4">{index + 1}</td>
-              <td className="border-b p-4">{user.name}</td>
-              <td className="border-b p-4">{user.email}</td>
-              <td className="border-b p-4">
+            <tr key={user.user_id} className="hover:bg-gray-50">
+              <td className="border-b p-3">{index + 1}</td>
+              <td className="border-b p-3">{user.fullname || "-"}</td>
+              <td className="border-b p-3">{user.email}</td>
+              <td className="border-b p-3">
                 <RoleSelector
                   currentRole={user.role}
                   loggedInUserRole={loggedInUserRole}
-                  onChangeRole={(newRole) => handleRoleChange(user.id, newRole)}
+                  onChangeRole={(newRole) => handleRoleChange(user.user_id, newRole)}
                 />
               </td>
-              <td className="border-b p-4">
+              <td className="border-b p-3">
                 <span
-                  className={`px-2 py-1 rounded-md text-xs ${
-                    user.status === "Active"
+                  className={`px-2 py-1 rounded text-sm font-medium ${
+                    user.status === "active"
                       ? "bg-green-200 text-green-700"
                       : "bg-yellow-200 text-yellow-700"
                   }`}
@@ -81,16 +74,16 @@ const UserTable = ({
                   {user.status}
                 </span>
               </td>
-              <td className="border-b p-4 py-10 mr-10 flex gap-2">
+              <td className="border-b p-3 space-x-2">
                 <button
-                  className="text-blue-500 hover:text-blue-700 transition-all"
-                  onClick={() => handleSuspend(user.id, user.status)}
+                  className="text-blue-500 hover:text-blue-700"
+                  onClick={() => handleSuspend(user.user_id, user.status)}
                 >
-                  {user.status === "Active" ? "Suspend" : "Activate"}
+                  {user.status === "active" ? "Suspend" : "Activate"}
                 </button>
                 <button
                   className="text-red-500 hover:text-red-700"
-                  onClick={() => onDelete(user.id)}
+                  onClick={() => onDelete(user.user_id)}
                 >
                   Hapus
                 </button>

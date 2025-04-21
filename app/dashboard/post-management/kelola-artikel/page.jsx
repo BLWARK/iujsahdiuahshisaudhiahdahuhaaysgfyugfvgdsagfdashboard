@@ -3,9 +3,10 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ArticleTable from "@/components/ArticleTable/ArticleTable";
 import { useBackend } from "@/context/BackContext";
+import ArticleListSkeleton from "@/components/ArticleListSkeleton";
 
 const KelolaArtikel = () => {
-  const { articles, getArticles, selectedPortal } = useBackend();
+  const { articles, getArticles, selectedPortal, setSelectedPortal } = useBackend();
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false); // 🔥 Mencegah pemanggilan ulang API
   const router = useRouter();
@@ -31,29 +32,31 @@ const KelolaArtikel = () => {
 
   // ✅ Panggil API hanya jika selectedPortal tersedia
   useEffect(() => {
-    console.log("📌 selectedPortal di halaman Kelola Artikel:", selectedPortal);
-
-    if (!selectedPortal?.platform_id) {
-      console.warn("⚠️ Tidak ada portal yang dipilih! Redirect ke /select-portal");
-      router.push("/select-portal"); // Redirect jika portal belum dipilih
-      return;
+    const storedPortal = JSON.parse(localStorage.getItem("selectedPortal"));
+  
+    if (!selectedPortal && storedPortal) {
+      console.log("🔄 Mengatur selectedPortal dari localStorage...");
+      setSelectedPortal(storedPortal);
     }
-
-    fetchArticles();
-  }, [selectedPortal, fetchArticles, router]);
+  
+    if (selectedPortal?.platform_id) {
+      fetchArticles();
+    }
+  }, [selectedPortal, fetchArticles]);
+  
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-4">
-        Kelola Artikel 
-      </h1>
+    <h1 className="text-3xl font-bold mb-4">
+      Kelola Artikel 
+    </h1>
 
-      {isLoading ? (
-        <p>Loading artikel...</p>
-      ) : (
-        <ArticleTable articles={articles} />
-      )}
-    </div>
+    {isLoading ? (
+      <ArticleListSkeleton count={10} />
+    ) : (
+      <ArticleTable articles={articles} />
+    )}
+  </div>
   );
 };
 

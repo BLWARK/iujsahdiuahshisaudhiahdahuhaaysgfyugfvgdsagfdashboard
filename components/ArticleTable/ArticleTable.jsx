@@ -1,47 +1,55 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import {
   AiOutlineEdit,
   AiOutlineDelete,
+  AiOutlineEye,
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
-import { useBackend } from "@/context/BackContext"; // Ambil data artikel dan fungsi getArticles dari context
+import { useBackend } from "@/context/BackContext";
+import { useRouter } from "next/navigation";
+import he from "he";
+import ArticlePreviewModal from "@/components/ArticlePreviewModal";
 
 const ArticleTable = () => {
-  const { articles, getArticles, user } = useBackend(); // Ambil data artikel dan user dari context
+  const {
+    articles,
+    getArticles,
+    selectedPortal,
+    user,
+    getArticleById,
+    handleEditArticle,
+    deleteArticleById,
+  } = useBackend();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isLoading, setIsLoading] = useState(true);
-  const [prevPlatformId, setPrevPlatformId] = useState(null);
 
+  const [previewData, setPreviewData] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const router = useRouter();
   const articlesPerPage = 15;
 
-  // Ambil platform_id yang sudah dipilih dari localStorage
   useEffect(() => {
-    const storedPortal = JSON.parse(localStorage.getItem("selectedPortal"));
-
-    if (storedPortal && storedPortal.platform_id) {
-      if (prevPlatformId !== storedPortal.platform_id) {
-        getArticles(storedPortal.platform_id);
-        setPrevPlatformId(storedPortal.platform_id);
-      }
+    if (selectedPortal?.platform_id) {
+      getArticles(selectedPortal.platform_id)
+        .then(() => setIsLoading(false))
+        .catch((err) => console.error("❌ Gagal memuat artikel:", err));
     }
-    setIsLoading(false);
-  }, [getArticles, prevPlatformId]);
+  }, [selectedPortal, getArticles]);
 
-  // Cek apakah `articles` adalah array dan user memiliki `author_id`
   const filteredArticles = Array.isArray(articles)
     ? articles.filter(
         (article) =>
-          article.platform_id === JSON.parse(localStorage.getItem("selectedPortal"))?.platform_id &&
-          article.author_id === user?.user_id // 🔥 Filter berdasarkan author_id
+          article.platform_id === selectedPortal?.platform_id &&
+          article.author_id === user?.user_id
       )
     : [];
 
-  // Sorting Artikel
   const sortedArticles = filteredArticles.sort((a, b) => {
     const valueA = a[sortColumn];
     const valueB = b[sortColumn];
@@ -64,9 +72,7 @@ const ArticleTable = () => {
     currentPage * articlesPerPage
   );
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page) => setCurrentPage(page);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -89,64 +95,126 @@ const ArticleTable = () => {
     return <AiOutlineSortAscending size={16} className="text-gray-400" />;
   };
 
+  const handleView = async (articleId) => {
+    try {
+      const data = await getArticleById(articleId);
+      setPreviewData({
+        ...data,
+        content: he.decode(data.content || ""),
+      });
+      setIsPreviewOpen(true);
+    } catch (err) {
+      console.error("❌ Gagal ambil artikel:", err);
+    }
+  };
+
+  const handleDelete = async (articleId) => {
+    const confirm = window.confirm("🗑️ Yakin ingin menghapus artikel ini?");
+    if (!confirm) return;
+
+    try {
+      await deleteArticleById(articleId);
+      await getArticles(selectedPortal.platform_id); // ✅ Refresh ulang data
+    } catch (err) {
+      console.error("❌ Gagal hapus artikel:", err);
+    }
+  };
+
   if (isLoading) return <p>Loading...</p>;
 
   return (
     <div className="bg-white p-6 rounded-md shadow-md w-full">
       <h2 className="text-2xl font-bold mb-6">
-        Daftar Artikel - {JSON.parse(localStorage.getItem("selectedPortal"))?.platform_name || "Pilih Portal"}
+        Daftar Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
       </h2>
       <table className="w-full text-left border-collapse">
         <thead>
           <tr>
             <th className="border-b p-4">#</th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("title")}>
-              <div className="flex items-center gap-2">Judul {getSortIcon("title")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("title")}
+            >
+              <div className="flex items-center gap-2">
+                Judul {getSortIcon("title")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("category")}>
-              <div className="flex items-center gap-2">Kategori {getSortIcon("category")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("category")}
+            >
+              <div className="flex items-center gap-2">
+                Kategori {getSortIcon("category")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("date")}>
-              <div className="flex items-center gap-2">Tanggal {getSortIcon("date")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("date")}
+            >
+              <div className="flex items-center gap-2">
+                Tanggal {getSortIcon("date")}
+              </div>
             </th>
-            <th className="border-b p-4">Status</th>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("status")}
+            >
+              <div className="flex items-center gap-2">
+                Status {getSortIcon("status")}
+              </div>
+            </th>
             <th className="border-b p-4">Approved/Rejected By</th>
             <th className="border-b p-4">Aksi</th>
-            <th className="border-b p-4">Alasan</th>
           </tr>
         </thead>
         <tbody>
           {currentArticles.map((article, index) => (
             <tr key={article._id} className="hover:bg-gray-50">
-              <td className="border-b p-4">{index + 1 + (currentPage - 1) * articlesPerPage}</td>
-              <td className="border-b p-4">{article.title}</td>
-              <td className="border-b p-4">{article.category.length > 0 ? article.category.join(", ") : "No Category"}</td>
-              <td className="border-b p-4">{new Date(article.date).toLocaleDateString()}</td>
               <td className="border-b p-4">
-                <span
-                  className={`px-2 py-1 text-sm rounded-md ${article.status === "Published" ? "bg-green-200 text-green-700" : article.status === "Rejected" ? "bg-red-200 text-red-700" : "bg-yellow-200 text-yellow-700"}`}
-                >
-                  {article.status}
-                </span>
+                {index + 1 + (currentPage - 1) * articlesPerPage}
+              </td>
+              <td className="border-b p-4">{article.title}</td>
+              <td className="border-b p-4">
+                {Array.isArray(article.category)
+                  ? article.category.join(", ")
+                  : article.category || "No Category"}
+              </td>
+              <td className="border-b p-4">
+                {new Date(article.date).toLocaleDateString()}
+              </td>
+              <td
+                className={`border-b p-4 font-semibold ${
+                  article.status === "Publish"
+                    ? "text-green-600"
+                    : article.status === "Reject"
+                    ? "text-red-600"
+                    : "text-orange-500"
+                }`}
+              >
+                {article.status}
               </td>
               <td className="border-b p-4">{article.approved_by || "-"}</td>
-              <td className="border-b p-4 text-center">
-                <button className="text-blue-500 hover:text-blue-700">
+              <td className="border-b p-4 text-center flex gap-2">
+                <button
+                  className="text-green-500 hover:text-green-700"
+                  onClick={() => handleView(article.article_id)}
+                  title="Lihat"
+                >
+                  <AiOutlineEye size={20} />
+                </button>
+                <button
+                  className="text-blue-500 hover:text-blue-700"
+                  onClick={() => handleEditArticle(article.article_id, router)}
+                >
                   <AiOutlineEdit size={20} />
                 </button>
-                <button className="text-red-500 hover:text-red-700 ml-2">
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => handleDelete(article.article_id)}
+                  title="Hapus Artikel"
+                >
                   <AiOutlineDelete size={20} />
                 </button>
-              </td>
-              <td className="border-b p-4 text-center">
-                {article.status === "Rejected" && (
-                  <button
-                    onClick={() => openReasonPopup(article.reason)}
-                    className="text-blue-500 underline hover:text-blue-700"
-                  >
-                    Lihat Alasan
-                  </button>
-                )}
               </td>
             </tr>
           ))}
@@ -162,7 +230,9 @@ const ArticleTable = () => {
         >
           Previous
         </button>
-        <span>Page {currentPage} of {totalPages}</span>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -171,6 +241,14 @@ const ArticleTable = () => {
           Next
         </button>
       </div>
+
+      {/* ✅ Modal untuk preview artikel */}
+      {isPreviewOpen && previewData && (
+        <ArticlePreviewModal
+          article={previewData}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -3,85 +3,117 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { useBackend } from "@/context/BackContext"; // ✅ Import BackContext
 
-const Editor = dynamic(() => import("@tinymce/tinymce-react").then((mod) => mod.Editor), {
-  ssr: false,
-  loading: () => <p>Loading editor...</p>,
-});
+const Editor = dynamic(
+  () => import("@tinymce/tinymce-react").then((mod) => mod.Editor),
+  {
+    ssr: false,
+    loading: () => <p>Loading editor...</p>,
+  }
+);
 
 const ArticleEditor = () => {
-  const { articleData, updateArticleData } = useBackend();
+  const { articleData, updateArticleData, uploadArticleImage } = useBackend();
   const [editorLoaded, setEditorLoaded] = useState(false);
-  const apiKey = process.env.NEXT_PUBLIC_TINYMCE_API_KEY || "7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c";
+  const apiKey =
+    process.env.NEXT_PUBLIC_TINYMCE_API_KEY ||
+    "7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c";
 
   return (
     <div className="p-4 border rounded-md bg-white shadow-md">
       {!editorLoaded && (
-        <button onClick={() => setEditorLoaded(true)} className="p-3 mb-2 border rounded-lg bg-blue-500 text-white">
-          Click to Write
+        <button
+          onClick={() => setEditorLoaded(true)}
+          className="p-3 mb-2 border rounded-lg bg-blue-500 text-white"
+        >
+          Click to Write/edit
         </button>
       )}
-      
+
       {editorLoaded && (
         <Editor
           apiKey={apiKey}
           value={articleData.content} // ✅ Gunakan state dari BackContext
-          onEditorChange={(newContent) => updateArticleData("content", newContent)} // Update langsung
+          onEditorChange={(newContent) =>
+            updateArticleData("content", newContent)
+          } // Update langsung
           init={{
             height: 600,
             menubar: true,
             plugins: [
-              "advlist", "autolink", "lists", "link", "image",
-              "charmap", "preview", "anchor", "searchreplace",
-              "visualblocks", "code", "fullscreen", "media",
-              "table", "help",
+              "advlist",
+              "autolink",
+              "lists",
+              "link",
+              "image",
+              "charmap",
+              "preview",
+              "anchor",
+              "searchreplace",
+              "visualblocks",
+              "code",
+              "fullscreen",
+              "media",
+              "table",
+              "help",
             ],
             toolbar:
               "undo redo | formatselect | bold italic backcolor | " +
               "alignleft aligncenter alignright alignjustify | " +
               "bullist numlist outdent indent | removeformat | help | image",
-            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+            content_style:
+              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             paste_data_images: true, // ✅ Izinkan paste & drag and drop gambar
 
-            // ✅ Custom Upload Handler untuk Mengunggah Gambar ke Backend
-            images_upload_handler: async (blobInfo, success, failure) => {
-              try {
-                const formData = new FormData();
-                formData.append("file", blobInfo.blob(), blobInfo.filename());
+            // ✅ Tambahkan ini agar elemen `script` dan `blockquote` tidak dihapus!
+            extended_valid_elements:
+              "script[src|async|charset],blockquote[class|dir|lang|data-*],iframe[src|frameborder|allowfullscreen],a[href|target],img[src|alt|title|width|height]",
+            valid_children: "+body[script],+blockquote[a|script]",
+            entity_encoding: "raw", // ✅ Jangan escape elemen HTML
+            verify_html: false, // ✅ Jangan verifikasi elemen HTML
 
-                // Kirim gambar ke backend
-                const response = await fetch("https://your-backend.com/upload", {
-                  method: "POST",
-                  body: formData,
-                });
+            // ✅ Tambahkan ini agar TinyMCE tidak membersihkan tag embed
+            valid_elements: "*[*]",
+            cleanup: false,
 
-                const data = await response.json();
-                if (data.url) {
-                  success(data.url); // ✅ Gunakan URL gambar dari server
-                } else {
-                  failure && failure("Upload gagal");
-                }
-              } catch (error) {
-                failure && failure("Gagal mengunggah gambar");
-              }
-            },
+            protect: [
+              /\<\/?script\>/g,
+              /\<\/?blockquote\>/g,
+            ],
 
-            // ✅ File Picker Callback untuk memilih gambar dari komputer
+          
+            
             file_picker_callback: function (callback, value, meta) {
               if (meta.filetype === "image") {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
                 input.setAttribute("accept", "image/*");
-                input.onchange = function () {
+            
+                input.onchange = async function () {
                   const file = this.files[0];
-                  const reader = new FileReader();
-                  reader.onload = function () {
-                    callback(reader.result, { alt: file.name });
-                  };
-                  reader.readAsDataURL(file);
+                  if (!file) return;
+            
+                  try {
+                    const url = await uploadArticleImage(file);
+                    console.log("📦 URL hasil upload:", url);
+            
+                    if (url && typeof url === "string" && url.startsWith("http")) {
+                      callback(url, { alt: file.name }); // ✅ hanya panggil kalau URL valid
+                    } else {
+                      alert("❌ Upload gagal: URL tidak valid atau kosong.");
+                    }
+                  } catch (err) {
+                    console.error("❌ Upload gagal:", err);
+                    alert("❌ Upload gagal: " + err.message);
+                  }
                 };
+            
                 input.click();
               }
             },
+            
+            
+            
+            
           }}
         />
       )}

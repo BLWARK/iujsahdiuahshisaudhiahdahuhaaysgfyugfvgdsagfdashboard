@@ -102,6 +102,15 @@ export async function customPatch(endpoint, data = {}, options = {}) {
   }
 }
 
+export async function customDelete(endpoint, options = {}) {
+  try {
+    const res = await customAxios.delete(endpoint, options);
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 /**
  * ✅ Fungsi Logout:
  * - Hapus token dari localStorage
