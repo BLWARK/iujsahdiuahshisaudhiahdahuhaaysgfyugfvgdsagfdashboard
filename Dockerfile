@@ -1,18 +1,23 @@
-# Dockerfile
+# Use official Node.js Alpine image
 FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
+# Copy package.json and package-lock.json (if available)
+COPY package*.json ./
+
 # Install dependencies
-COPY package.json package-lock.json* ./
 RUN npm install
 
-# Copy source files
+# Copy all application files
 COPY . .
 
-# Build command can be adjusted depending on dev or prod
-# For dev: docker-compose handles "npm run dev"
-# For prod:
-# RUN npm run build
-# CMD ["npm", "start"]
+# Build the Next.js app
+RUN npm run build
+
+# Expose port used by Next.js (default is 3000)
+EXPOSE 3000
+
+# Start the Next.js app
+CMD ["npm", "start"]

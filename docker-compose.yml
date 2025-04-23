@@ -1,16 +1,17 @@
 version: '3.8'
 
 services:
-  web:
-    container_name: dashboard-coinzone
-    build:
-      context: .
-      dockerfile: Dockerfile
+  portal-web:
+    build: .
+    container_name: portal-web
     ports:
-      - '3001:3000'
-    environment:
-      - NODE_ENV=development
+      - "3001:3000"
+    env_file:
+      - .env
     volumes:
       - .:/app
       - /app/node_modules
-    command: npm run dev
+    working_dir: /app
+    command: ["npm", "start"]
+    environment:
+      - NODE_ENV=production
