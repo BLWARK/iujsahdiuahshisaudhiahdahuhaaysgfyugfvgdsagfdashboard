@@ -20,6 +20,7 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_API_BASE_URL=http://srv583612.hstgr.cloud:3000
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
