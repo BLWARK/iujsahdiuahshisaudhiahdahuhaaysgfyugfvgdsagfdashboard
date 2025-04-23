@@ -7,7 +7,9 @@ COPY package*.json ./
 COPY tsconfig.json ./
 COPY next.config.ts ./
 COPY public ./public
-COPY . .  # Copy semua isi project, termasuk folder app/ 
+COPY . .  
+
+# Copy semua isi project, termasuk folder app/ 
 
 RUN npm install
 RUN npm run build
