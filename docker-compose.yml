@@ -6,8 +6,6 @@ services:
     container_name: portal-web
     ports:
       - "3001:3000"
-    env_file:
-      - .env
     volumes:
       - .:/app
       - /app/node_modules
