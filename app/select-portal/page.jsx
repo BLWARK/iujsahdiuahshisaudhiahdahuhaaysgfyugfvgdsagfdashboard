@@ -21,8 +21,12 @@ export default function SelectPortal() {
     if (typeof window === "undefined") return; // Hindari error SSR
 
     const user = JSON.parse(localStorage.getItem("user") || "null");
-    const storedPlatforms = JSON.parse(localStorage.getItem("platforms") || "[]");
-    const storedSelectedPortal = JSON.parse(localStorage.getItem("selectedPortal") || "null");
+    const storedPlatforms = JSON.parse(
+      localStorage.getItem("platforms") || "[]"
+    );
+    const storedSelectedPortal = JSON.parse(
+      localStorage.getItem("selectedPortal") || "null"
+    );
 
     if (!user || !storedPlatforms.length) {
       router.push("/login"); // Redirect ke login jika belum login
@@ -32,7 +36,10 @@ export default function SelectPortal() {
 
       // ✅ Jika ada portal yang sudah dipilih sebelumnya, gunakan kembali
       if (storedSelectedPortal) {
-        console.log("✅ Menggunakan portal yang sebelumnya dipilih:", storedSelectedPortal);
+        console.log(
+          "✅ Menggunakan portal yang sebelumnya dipilih:",
+          storedSelectedPortal
+        );
         setSelectedPortal(storedSelectedPortal);
       }
     }
@@ -40,14 +47,21 @@ export default function SelectPortal() {
 
   // ✅ Handle pemilihan portal
   const handleSelectPortal = (portal) => {
-    const matchedPortal = allowedPortals.find((p) => p.platform_id === portal.id);
+    const matchedPortal = allowedPortals.find(
+      (p) => p.platform_id === portal.id
+    );
 
     if (matchedPortal) {
       setSelectedPortal(matchedPortal);
       localStorage.setItem("selectedPortal", JSON.stringify(matchedPortal));
-      console.log("✅ Portal dipilih & disimpan di localStorage:", matchedPortal);
+      console.log(
+        "✅ Portal dipilih & disimpan di localStorage:",
+        matchedPortal
+      );
     } else {
-      console.warn("⚠️ Portal tidak ditemukan dalam daftar platform yang diizinkan.");
+      console.warn(
+        "⚠️ Portal tidak ditemukan dalam daftar platform yang diizinkan."
+      );
     }
   };
 
@@ -96,11 +110,15 @@ export default function SelectPortal() {
 
         {/* ✅ Tampilkan loading jika masih mengambil data */}
         {isLoading ? (
-          <p className="text-center text-gray-500">Memuat platform...</p>
+          <div className="flex justify-center items-center h-40">
+            <div className="loader" />
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {portals.map((portal) => {
-              const isAllowed = allowedPortals.some((p) => p.platform_id === portal.id);
+              const isAllowed = allowedPortals.some(
+                (p) => p.platform_id === portal.id
+              );
               const isSelected = selectedPortal?.platform_id === portal.id;
 
               return (

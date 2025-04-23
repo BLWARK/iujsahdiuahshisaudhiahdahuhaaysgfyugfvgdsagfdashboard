@@ -1,13 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import UserTable from "@/components/UserTable/UserTable";
-import PendingUsersTable from "@/components/UserTable/PendingUserTable";
 import AddUserModal from "@/components/UserTable/AddUserModal";
 import Swal from "sweetalert2";
 import { useBackend } from "@/context/BackContext";
 
 const ManageUsers = () => {
-  const { getAllUsers, createUser,  deleteUserById } = useBackend();
+  const {
+    getAllUsers,
+    createUser,
+    deleteUserById,
+    deletePlatformAccessByUserId,
+  } = useBackend();
 
   const [userList, setUserList] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -49,16 +53,16 @@ const ManageUsers = () => {
     );
   };
 
-  const handleApproveUser = (userId) => {
-    const approvedUser = pendingUsers.find((user) => user.user_id === userId);
-    if (approvedUser) {
-      setPendingUsers(pendingUsers.filter((user) => user.user_id !== userId));
-      setUserList([
-        ...userList,
-        { ...approvedUser, role: "Contributor", status: "Active" },
-      ]);
-    }
-  };
+  // const handleApproveUser = (userId) => {
+  //   const approvedUser = pendingUsers.find((user) => user.user_id === userId);
+  //   if (approvedUser) {
+  //     setPendingUsers(pendingUsers.filter((user) => user.user_id !== userId));
+  //     setUserList([
+  //       ...userList,
+  //       { ...approvedUser, role: "Contributor", status: "Active" },
+  //     ]);
+  //   }
+  // };
 
   const handleRejectUser = (userId, reason) => {
     setPendingUsers(pendingUsers.filter((user) => user.user_id !== userId));
@@ -71,27 +75,26 @@ const ManageUsers = () => {
 
   const handleAddUser = async (userData) => {
     try {
-      await createUser(userData);
-  
+      // PASTIKAN platform_ids tetap dikirim (jangan dibuang!)
+      await createUser(userData); // ⬅️ langsung kirim, jangan destruktur
+
       const all = await getAllUsers();
       const active = all.filter((u) => u.status !== "Pending");
       const pending = all.filter((u) => u.status === "Pending");
       setUserList(active);
       setPendingUsers(pending);
       setIsModalOpen(false);
-  
+
       Swal.fire({
         icon: "success",
         title: "Berhasil!",
         text: "User berhasil ditambahkan.",
-        confirmButtonColor: "#3085d6",
       });
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Gagal",
         text: "Terjadi kesalahan saat menambahkan user.",
-        confirmButtonColor: "#d33",
       });
     }
   };
@@ -106,23 +109,37 @@ const ManageUsers = () => {
       confirmButtonText: "Ya, hapus!",
       cancelButtonText: "Batal",
     });
-  
+
     if (result.isConfirmed) {
       try {
-        await deleteUserById(userId);
+        await deletePlatformAccessByUserId(userId); // 🧹 hapus akses dulu
+        await deleteUserById(userId); // 🗑️ baru hapus user
+
         const updated = await getAllUsers();
         const active = updated.filter((u) => u.status !== "Pending");
         const pending = updated.filter((u) => u.status === "Pending");
         setUserList(active);
         setPendingUsers(pending);
-  
+
         Swal.fire("✅ Dihapus!", "User berhasil dihapus.", "success");
       } catch (err) {
-        Swal.fire("❌ Gagal", "Tidak dapat menghapus user.", "error");
+        Swal.fire(
+          "❌ Gagal",
+          "silahkan hapus akses platfrom user terlebih dahulu melalui menu edit user",
+          "error"
+        );
       }
     }
   };
-  
+  const handleUpdateUser = (updatedUser) => {
+    setUserList((prev) =>
+      prev.map((user) =>
+        user.user_id === updatedUser.user_id
+          ? { ...user, ...updatedUser }
+          : user
+      )
+    );
+  };
 
   if (!loggedInUser) return <p>Loading...</p>;
 
@@ -143,17 +160,16 @@ const ManageUsers = () => {
         loggedInUserId={loggedInUser.user_id}
         loggedInUserRole={loggedInUser.role}
         onDelete={handleDeleteUser}
-        onChangeRole={handleChangeRole}
         onSuspend={handleSuspendUser}
-        onSave={handleSaveChanges}
+        onUpdateUser={handleUpdateUser} // ✅ kirim ke UserTable
       />
 
-      <h1 className="text-2xl font-bold">Pending Users</h1>
+      {/* <h1 className="text-2xl font-bold">Pending Users</h1>
       <PendingUsersTable
         pendingUsers={pendingUsers}
         onApprove={handleApproveUser}
         onReject={handleRejectUser}
-      />
+      /> */}
 
       {/* ✅ Modal Tambah User */}
       {isModalOpen && (

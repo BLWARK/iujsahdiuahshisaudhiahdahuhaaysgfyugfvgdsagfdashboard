@@ -3,28 +3,53 @@ import React, { useState, useEffect } from "react";
 import { useBackend } from "@/context/BackContext";
 import Swal from "sweetalert2";
 
-
 const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
-  const { uploadImage } = useBackend();
+  const { uploadImage, addPlatformAccess, getAllPlatforms } = useBackend();
 
   const initialForm = {
     email: "",
+    username: "", // ✅ tambahkan ini
     password: "",
     status: "active",
     fullname: "",
-    first_name: "",
-    last_name: "",
     role: "Contributor",
-    avatar: "", // Will be set by upload
+    avatar: "",
+    selectedPlatforms: [],
   };
 
   const [formData, setFormData] = useState(initialForm);
   const [avatarFile, setAvatarFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [platformOptions, setPlatformOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchPlatforms = async () => {
+      const platforms = await getAllPlatforms();
+      setPlatformOptions(platforms || []);
+    };
+
+    if (isOpen) {
+      setFormData(initialForm);
+      setAvatarFile(null);
+      fetchPlatforms();
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const togglePlatform = (id) => {
+    setFormData((prev) => {
+      const already = prev.selectedPlatforms.includes(id);
+      return {
+        ...prev,
+        selectedPlatforms: already
+          ? prev.selectedPlatforms.filter((pid) => pid !== id)
+          : [...prev.selectedPlatforms, id],
+      };
+    });
   };
 
   const handleFileChange = (e) => {
@@ -32,60 +57,44 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
     setAvatarFile(file);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData(initialForm);
-      setAvatarFile(null);
-    }
-  }, [isOpen]);
-
   const handleSubmit = async () => {
-    const { email, password } = formData;
+    const { email, password, selectedPlatforms, ...userFields } = formData;
+
     if (!email || !password) {
       Swal.fire("❗Oops", "Email dan password wajib diisi!", "warning");
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       let avatarUrl = "";
-  
+
       if (avatarFile) {
         avatarUrl = await uploadImage(avatarFile);
       }
-  
-      const { user_id, ...cleanForm } = formData;
-  
+
       const userPayload = {
-        ...cleanForm,
-        username: email,
+        ...userFields,
+        username: formData.username, // ✅ ambil dari formData.username
+        email,
+        password,
         avatar: avatarUrl,
+        platform_ids: selectedPlatforms,
       };
-  
-      console.log("📦 Payload:", userPayload);
-  
-      // anggap sukses jika tidak throw
-      await onSubmit(userPayload);
-  
+
+      await onSubmit(userPayload); // ⬅️ kirim ke handleAddUser di ManageUsers
       Swal.fire("✅ Sukses", "Pengguna berhasil ditambahkan", "success");
       onClose();
     } catch (error) {
-      console.error("❌ Gagal:", error);
-  
-      if (error?.response?.data?.code === "23505") {
-        Swal.fire("❌ Duplikat", "Email sudah terdaftar.", "error");
-      } else {
-        Swal.fire("❌ Error", "Gagal menambahkan pengguna.", "error");
-      }
+      Swal.fire(
+        "❌ Gagal",
+        error.message || "Gagal menambahkan pengguna",
+        "error"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  
-
-  
-  
 
   if (!isOpen) return null;
 
@@ -111,26 +120,21 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
             onChange={handleChange}
           />
           <input
+            name="username"
+            placeholder="Username"
+            className="border p-2 rounded"
+            value={formData.username}
+            onChange={handleChange}
+          />
+           <input
             name="fullname"
-            placeholder="Full Name"
+            placeholder="fullname"
             className="border p-2 rounded"
             value={formData.fullname}
             onChange={handleChange}
           />
-          <input
-            name="first_name"
-            placeholder="First Name"
-            className="border p-2 rounded"
-            value={formData.first_name}
-            onChange={handleChange}
-          />
-          <input
-            name="last_name"
-            placeholder="Last Name"
-            className="border p-2 rounded"
-            value={formData.last_name}
-            onChange={handleChange}
-          />
+
+         
           <input
             type="file"
             accept="image/*"
@@ -145,8 +149,26 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
           >
             <option value="Contributor">Contributor</option>
             <option value="Editor">Editor</option>
-            <option value="Super Admin">Super Admin</option>
           </select>
+
+          {/* Platform checklist */}
+          <div className="border p-2 rounded max-h-40 overflow-y-auto">
+            <label className="font-semibold mb-1 block">Akses Platform:</label>
+            {platformOptions.map((p) => (
+              <label
+                key={p.platform_id}
+                className="flex items-center space-x-2 my-1"
+              >
+                <input
+                  type="checkbox"
+                  value={p.platform_id}
+                  checked={formData.selectedPlatforms.includes(p.platform_id)}
+                  onChange={() => togglePlatform(p.platform_id)}
+                />
+                <span>{p.platform_desc || p.platform_name}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">

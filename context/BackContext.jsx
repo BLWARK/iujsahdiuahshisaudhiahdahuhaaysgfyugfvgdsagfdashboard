@@ -129,38 +129,66 @@ export const BackProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await customPost("/api/login", { email, password });
-
-      if (response?.token) {
-        const expiresAt = new Date().getTime() + 8 * 60 * 60 * 1000; // 8 jam
-
+  
+      if (response?.user?.status === "suspended") {
+        return {
+          success: false,
+          message: "Akun Anda disuspend. Silakan hubungi admin.",
+        };
+      }
+  
+      if (response?.token && response?.user) {
+        const expiresAt = new Date().getTime() + 8 * 60 * 60 * 1000;
+  
         localStorage.setItem("token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("currentUser", JSON.stringify(response.user));
         localStorage.setItem("platforms", JSON.stringify(response.platforms));
         localStorage.setItem("expiresAt", expiresAt.toString());
-
+  
         setToken(response.token);
         setUser(response.user);
         setRole(response.user.role || "Guest");
         setPlatforms(response.platforms);
-
+  
         setArticleData((prev) => ({
           ...prev,
           author_id: response.user.user_id,
           platform_id: response.platforms?.[0]?.platform_id || null,
         }));
-
+  
         router.push("/select-portal");
+  
         return { success: true };
-      } else {
-        // ✅ Jangan throw error → kasih response biasa
-        return { success: false, message: response?.message || "Login gagal!" };
       }
+  
+      return {
+        success: false,
+        message: "Email atau password salah. Silakan coba lagi.",
+      };
     } catch (error) {
-      // ✅ Jangan console.error → cukup kasih respons biasa
-      return { success: false, message: "Login gagal!" };
+      // ✅ Ambil pesan dari backend jika tersedia
+      const msg = error?.response?.data?.message;
+  
+      if (msg === "Invalid credentials") {
+        return { success: false, message: "Email atau password salah. Silakan coba lagi." };
+      }
+  
+      if (msg === "User is suspended") {
+        return { success: false, message: "Akun Anda disuspend. Silakan hubungi admin." };
+      }
+      if (msg === "Database error") {
+        return { success: false, message: "Gagal Login Silahkan cek email dan password anda" };
+      }
+  
+      // Fallback jika pesan tidak dikenal
+      return {
+        success: false,
+        message: msg || "Login gagal. Silakan coba lagi nanti.",
+      };
     }
   };
+  
 
   // ✅ Fungsi untuk menyimpan draft artikel
   const saveDraft = async () => {
@@ -707,16 +735,83 @@ export const BackProvider = ({ children }) => {
     }
   };
 
-  const createUser = async (userData) => {
+  const getAllPlatforms = async () => {
     try {
-      const response = await customPost("/api/users", userData);
-      console.log("✅ User berhasil ditambahkan:", response);
-      return response;
+      const response = await customGet("/api/platform-access");
+  
+      // Ambil list platform unik dari field .platforms
+      const allAccess = Array.isArray(response?.data) ? response.data : [];
+  
+      const uniquePlatforms = [];
+      const seen = new Set();
+  
+      for (const item of allAccess) {
+        const platform = item.platforms;
+        if (platform && !seen.has(platform.platform_id)) {
+          seen.add(platform.platform_id);
+          uniquePlatforms.push(platform);
+        }
+      }
+  
+      return uniquePlatforms;
     } catch (error) {
-      console.error("❌ Gagal menambahkan user:", error);
+      console.error("❌ Gagal mengambil daftar platform:", error);
+      return [];
+    }
+  };
+
+  // Di BackContext: tambahkan fungsi ini (kalau belum ada)
+  const getPlatformAccessByUser = async (userId) => {
+  try {
+    const res = await customGet(`/api/platform-access?user_id=${userId}`);
+    return res?.data || [];
+  } catch (error) {
+    console.error("❌ Gagal mengambil platform access user:", error);
+    return [];
+  }
+  };
+
+  const getPlatformAccessByUserId = async (userId) => {
+  try {
+    const res = await customGet(`/api/platform-access?user_id=${userId}`);
+    return Array.isArray(res?.data) ? res.data : [];
+  } catch (err) {
+    console.error("❌ Gagal ambil akses platform:", err);
+    return [];
+  }
+  };
+
+
+  const createUser = async (payload) => {
+  try {
+    const res = await customPost("/api/users", payload); // ⬅️ langsung kirim payload, JANGAN destruktur tanpa platform_ids
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
+  };
+
+
+  const getUserById = async (userId) => {
+    try {
+      const response = await customGet(`/api/users/${userId}`);
+      return response; // ✅ langsung return karena data user langsung di root
+    } catch (error) {
+      console.error("❌ Gagal mengambil user:", error);
       throw error;
     }
   };
+  
+  const deletePlatformAccessByUserId = async (userId) => {
+    try {
+      await customDelete(`/api/platform-access/${userId}`); // endpoint-nya bisa disesuaikan
+    } catch (error) {
+      console.error("❌ Gagal menghapus akses platform:", error);
+      throw error;
+    }
+  };
+  
+  
 
   const deleteUserById = async (userId) => {
     try {
@@ -724,10 +819,63 @@ export const BackProvider = ({ children }) => {
       console.log("🗑️ User berhasil dihapus:", response);
       return response;
     } catch (error) {
-      console.error("❌ Gagal menghapus user:", error);
+      // Jangan tampilkan error lengkap di console untuk user biasa
+      // console.error("❌ Gagal menghapus user:", error);
+  
+      // Bisa ganti dengan pesan aman untuk developer (opsional)
+      console.warn("❌ Gagal menghapus user. Pastikan platform access dihapus terlebih dahulu.");
+  
+      // Tetap lempar error agar handler di UI bisa tangani swal-nya
+      throw new Error("Gagal menghapus user. Silakan hapus akses platform dari menu edit.");
+    }
+  };
+  
+
+  const addPlatformAccess = async (userId, platformId) => {
+    try {
+      const response = await customPost("/api/platform-access", {
+        user_id: userId,
+        platform_id: platformId,
+      });
+      return response;
+    } catch (error) {
+      console.error("❌ Gagal menambahkan akses platform:", error);
       throw error;
     }
   };
+
+  const updateUserPlatformAccess = async (userId, platformIds) => {
+    try {
+      await customPut(`/api/platform-access/${userId}`, {
+        platform_ids: platformIds, // array of IDs
+      });
+    } catch (error) {
+      console.error("❌ Gagal update akses platform:", error);
+      throw error;
+    }
+  };
+  
+
+  
+  
+  const updateUsers = async (userData) => {
+    const userId = userData.user_id;
+    if (!userId) throw new Error("User ID tidak tersedia");
+  
+    const { user_id, ...payload } = userData;
+  
+    try {
+      const response = await customPut(`/api/users/${userId}`, payload, {
+       
+      });
+  
+      return response?.data;
+    } catch (error) {
+      console.error("❌ Gagal update user:", error);
+      throw error;
+    }
+  };
+  
   
   
   
@@ -902,6 +1050,14 @@ export const BackProvider = ({ children }) => {
       getAllUsers,
       createUser,
       deleteUserById,
+      addPlatformAccess,
+      getAllPlatforms,
+      getPlatformAccessByUser,
+      getUserById,
+      getPlatformAccessByUserId,
+      updateUsers,
+      updateUserPlatformAccess,
+      deletePlatformAccessByUserId
     }),
     [
       user,

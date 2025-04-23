@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useBackend } from "@/context/BackContext";
+import Swal from "sweetalert2";
 
 export default function LoginForm() {
   const { login } = useBackend();
@@ -8,37 +9,43 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
   
-    // ✅ Validasi input sebelum hit API
     if (!email || !password) {
-      setError("Email dan Password harus diisi!");
+      Swal.fire("❗Oops", "Email dan password wajib diisi!", "warning");
       return;
     }
   
     setLoading(true);
   
     try {
-      const response = await login(email, password);
+      const result = await login(email, password);
   
-      if (!response?.token) {
-        // ✅ Jika gagal dari response backend → tampilkan pesan dari backend atau default
-        setError(response?.message || "Login gagal, periksa kembali email dan password!");
-        setPassword(""); // Kosongkan hanya password
+      if (!result.success) {
+        Swal.fire("❌ Gagal Login", result.message || "Login gagal!", "error");
+        setPassword("");
+      } else {
+        setIsRedirecting(true); // ⬅️ Tampilkan spinner
       }
     } catch (err) {
-      // ✅ Tangkap error dari jaringan atau koneksi
-      setError("Login gagal! Periksa koneksi internet atau coba lagi nanti.");
+      Swal.fire("❌ Error", "Login gagal silahkan cek Password dan Email", "error");
     } finally {
       setLoading(false);
     }
   };
+  {isRedirecting && (
+    <div className="spinner-overlay">
+      <div className="spinner"></div>
+    </div>
+  )}
   
 
   return (
+    
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <input
@@ -58,7 +65,9 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className={`w-full ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} text-white py-2 rounded-md`}
+        className={`w-full ${
+          loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+        } text-white py-2 rounded-md`}
       >
         {loading ? "Logging in..." : "Log in"}
       </button>
