@@ -1,15 +1,12 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  portal-web:
+  dashboard-coinzone:
+    image: dashboard-coinzone
+    container_name: dashboard-coinzone
     build: .
-    container_name: portal-web
     ports:
-      - "3001:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    working_dir: /app
-    command: ["npm", "start"]
+      - "3001:9001"
     environment:
       - NODE_ENV=production
+    restart: always

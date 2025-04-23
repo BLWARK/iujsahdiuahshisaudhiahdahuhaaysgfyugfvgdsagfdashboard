@@ -1,23 +1,30 @@
-# Use official Node.js Alpine image
-FROM node:20-alpine
+# Step 1: Build
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY next.config.mjs ./
+COPY public ./public
+COPY src ./src
 
-# Install dependencies
 RUN npm install
-
-# Copy all application files
-COPY . .
-
-# Build the Next.js app
 RUN npm run build
 
-# Expose port used by Next.js (default is 3000)
+# Step 2: Run
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+
 EXPOSE 3000
 
-# Start the Next.js app
 CMD ["npm", "start"]
