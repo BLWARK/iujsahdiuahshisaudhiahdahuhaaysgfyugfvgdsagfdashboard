@@ -444,6 +444,21 @@ export const BackProvider = ({ children }) => {
       []
   ); // dependency kosong, jika tidak tergantung pada state lain
 
+  const getArticlesLink = useCallback(
+    async (platformId, page = 1, limit = 15) => {
+    if (!platformId) return;
+    try {
+      const response = await customGet(
+        `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=all`
+      );
+      setArticles(response.data);
+      return response;
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      throw error; } },
+      []
+  ); // dependency kosong, jika tidak tergantung pada state lain
+
   const getArticlesPublish = useCallback(
     async (platformId, page = 1, limit = 10) => {
       if (!platformId) return;
@@ -1028,6 +1043,7 @@ export const BackProvider = ({ children }) => {
       saveDraft,
       saveEditedDraft,
       getArticles,
+      getArticlesLink,
       getArticlesPublish,
       getArticlesPending,
       getArticlesReject,
