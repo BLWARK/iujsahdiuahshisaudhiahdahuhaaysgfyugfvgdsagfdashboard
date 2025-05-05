@@ -65,7 +65,7 @@ const ArticleEditor = () => {
               "wordcount",
             ],
             toolbar:
-              "undo redo |  fontsizeselect blocks fontsizeinput | alignleft aligncenter alignright alignjustify  " +
+              "undo redo |  blocks | alignleft " +
               "| bold italic underline |  " +
               "bullist numlist outdent indent | link image media",
 

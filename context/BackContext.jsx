@@ -281,35 +281,32 @@ export const BackProvider = ({ children }) => {
   const submitArticle = async () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     const userId = user?.user_id || storedUser?.user_id || null;
-    // Ambil platform_id dari selectedPortal, pastikan sudah valid
     const platformId = selectedPortal?.platform_id;
-
+  
     if (!platformId || !userId) {
-      alert(
-        "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
-      );
+      alert("❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel.");
       return;
     }
-
-    // Pastikan platform_id adalah integer antara 0 dan 9
-    const platformIdInt = parseInt(platformId, 10); // Ubah platform_id menjadi integer
-    if (isNaN(platformIdInt) || platformIdInt < 0 || platformIdInt > 9) {
-      alert("❌ Platform ID harus berupa angka valid antara 0 dan 9.");
+  
+    const platformIdInt = parseInt(platformId, 10);
+    if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
+      alert("❌ Platform ID tidak valid.");
       return;
     }
-
-    const { imageFile, ...articleWithoutImage } = articleData || {}; // Pisahkan imageFile dari data artikel
-
-    // Jika ada gambar, upload gambar terlebih dahulu
+  
+    const { imageFile, ...articleWithoutImage } = articleData || {};
     let imageUrl = null;
+  
     if (imageFile) {
       try {
-        imageUrl = await uploadImage(imageFile); // Upload gambar dan dapatkan URL
+        imageUrl = await uploadImage(imageFile);
       } catch (error) {
-        console.error("Gagal mengupload gambar:", error);
+        console.error("❌ Gagal mengupload gambar:", error);
+        alert("❌ Upload gambar gagal. Silakan coba lagi.");
+        return;
       }
     }
-
+  
     try {
       const payload = {
         ...articleWithoutImage,
@@ -327,23 +324,23 @@ export const BackProvider = ({ children }) => {
               .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
           : [],
       };
-
+  
       const response = await customPost("/api/articles", payload);
-
       const articleId = response?.article_id || response?._id;
-
+  
       if (!articleId) {
-        throw new Error("Gagal mendapatkan article_id.");
+        throw new Error("Gagal mendapatkan article_id dari response.");
       }
-
+  
       console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
-
       return articleId;
     } catch (error) {
-      console.error("Error submitting article:", error);
-      throw new Error("Gagal mengirim artikel.");
+      console.error("❌ Error submitting article:", error);
+      alert("❌ Gagal mengirim artikel. Silakan periksa kembali data Anda.");
+      throw error;
     }
   };
+  
 
   const saveHeadlines = async (headlines, headlineCategory = "HOME") => {
     if (!selectedPortal?.platform_id) {
@@ -752,16 +749,15 @@ export const BackProvider = ({ children }) => {
 
   const getAllPlatforms = async () => {
     try {
-      const response = await customGet("/api/platform-access");
+      const response = await customGet("/api/platforms");
   
-      // Ambil list platform unik dari field .platforms
-      const allAccess = Array.isArray(response?.data) ? response.data : [];
+      // FIX di sini
+      const allPlatforms = Array.isArray(response?.data) ? response.data : [];
   
       const uniquePlatforms = [];
       const seen = new Set();
   
-      for (const item of allAccess) {
-        const platform = item.platforms;
+      for (const platform of allPlatforms) {
         if (platform && !seen.has(platform.platform_id)) {
           seen.add(platform.platform_id);
           uniquePlatforms.push(platform);
@@ -774,6 +770,8 @@ export const BackProvider = ({ children }) => {
       return [];
     }
   };
+  
+  
 
   // Di BackContext: tambahkan fungsi ini (kalau belum ada)
   const getPlatformAccessByUser = async (userId) => {
