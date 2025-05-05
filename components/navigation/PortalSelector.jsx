@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { useBackend } from "@/context/BackContext";
 
@@ -73,7 +72,7 @@ const PortalSelector = () => {
     <div className="relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center gap-2 bg-white text-main px-4 py-2 rounded-md hover:bg-gray-100 transition"
+        className="flex items-center gap-2 bg-white text-main px-6 py-4 rounded-md hover:bg-gray-100 transition"
       >
         {selectedPortal?.platform_id ? (
           (() => {
@@ -83,14 +82,8 @@ const PortalSelector = () => {
 
             return selectedPlatform ? (
               <>
-                <Image
-                  src={getPortalLogo(selectedPlatform.platform_name)}
-                  alt={selectedPlatform.platform_name}
-                  width={30}
-                  height={30}
-                  className="rounded-full"
-                />
-                <span className="text-xs text-nowrap">
+                
+                <span className="text-md text-nowrap">
                   {selectedPlatform.platform_name || "Pilih Portal"}
                 </span>
               </>
@@ -105,7 +98,7 @@ const PortalSelector = () => {
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute left-0 mt-2 w-60 bg-white text-black shadow-md font-semibold rounded-md z-50">
+        <div className="absolute -left-20 mt-2 w-60 bg-white text-black shadow-md font-semibold rounded-md z-50">
           {allowedPortals.length > 0 ? (
             allowedPortals.map((portal) => (
               <button
@@ -115,13 +108,7 @@ const PortalSelector = () => {
                   portal.isSelected ? "bg-gray-200 font-semibold" : ""
                 }`}
               >
-                <Image
-                  src={portal.logo}
-                  alt={portal.platform_name}
-                  width={20}
-                  height={20}
-                  className="rounded-full"
-                />
+                
                 {portal.platform_name}
               </button>
             ))
