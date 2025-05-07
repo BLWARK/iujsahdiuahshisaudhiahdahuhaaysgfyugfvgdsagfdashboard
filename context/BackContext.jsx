@@ -712,7 +712,7 @@ export const BackProvider = ({ children }) => {
     try {
       const response = await customPut(`/api/articles/${articleId}`, {
         article_id: articleId, // Kirimkan article_id ke backend
-        status: "Publish", // Status yang ingin diubah
+        status: "publish", // Status yang ingin diubah
       });
 
       console.log("Response:", response); // Log response dari backend
