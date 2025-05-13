@@ -223,8 +223,8 @@ const HeadlineByCategoryPage = () => {
   const totalPages = meta?.totalPages || 1;
 
   return (
-    <div className="p-6">
-      <div className="flex gap-4 mb-6">
+    <div className="p-6 space-y-8 relative 2xl:w-full xl:w-full lg:w-full w-[390px]">
+      <div className="flex gap-4 mb-6 overflow-x-auto">
       {categories.map((cat) => (
   <button
     key={cat.id}
@@ -234,7 +234,7 @@ const HeadlineByCategoryPage = () => {
     }}
     className={`${
       selectedCategory === cat.category_name
-        ? "font-bold p-4 bg-blue-500 text-white rounded-lg"
+        ? "font-bold p-4 bg-pink-500 text-white rounded-lg "
         : "border border-gray-400 p-4 rounded-lg text-gray-800"
     }`}
   >
@@ -245,7 +245,7 @@ const HeadlineByCategoryPage = () => {
       </div>
       <div className="w-full h-[1px] bg-gray-300 mb-6"></div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid 2xl:grid-cols-4 xl:grid-cols-4 lg:grid-cols-4 grid-cols-1 gap-4 mb-8">
         {headlines.map((item, index) => (
           <div key={item.article_id} className="border rounded p-4 shadow">
             <div className="relative w-full h-32">
@@ -315,7 +315,7 @@ const HeadlineByCategoryPage = () => {
       <div className="mt-6">
         <button
           onClick={handleSave}
-          className="px-6 py-3 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+          className="px-6 py-3 bg-pink-600 text-white rounded shadow hover:bg-pink-700"
         >
           Simpan Headline
         </button>

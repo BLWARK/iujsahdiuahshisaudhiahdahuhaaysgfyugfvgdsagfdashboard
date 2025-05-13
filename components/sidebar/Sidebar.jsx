@@ -104,7 +104,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <aside
-      className={`bg-main text-white w-64 h-full 2xl:relative shadow-lg z-50 overflow-y-auto ${
+      className={`bg-gray-700 text-white w-64 h-full 2xl:relative shadow-lg z-50 overflow-y-auto ${
         isOpen
           ? "fixed inset-y-0 left-0 transform translate-x-0 transition-transform duration-300 ease-in-out"
           : "fixed inset-y-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out 2xl:block 2xl:translate-x-0"
@@ -124,7 +124,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
         <Link
           href="/dashboard/buat-artikel"
-          className="flex items-center gap-4 py-5 px-10 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"
+          className="flex items-center gap-4 py-5 px-10 rounded-md bg-pink-600 text-white hover:bg-pink-700 transition-all duration-300"
         >
           <AiOutlinePlus size={20} />
           <span className="text-sm font-bold">Buat Artikel</span>

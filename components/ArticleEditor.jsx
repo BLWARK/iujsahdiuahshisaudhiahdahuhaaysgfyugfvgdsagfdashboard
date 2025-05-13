@@ -30,7 +30,7 @@ const ArticleEditor = () => {
       {!editorLoaded && (
         <button
           onClick={() => setEditorLoaded(true)}
-          className="p-3 mb-2 border rounded-lg bg-blue-500 text-white"
+          className="p-3 mb-2 border rounded-lg bg-pink-500 text-white"
         >
           Click to Write/edit
         </button>
@@ -63,6 +63,7 @@ const ArticleEditor = () => {
               "table",
               "help",
               "wordcount",
+              
             ],
             toolbar:
               "undo redo |  blocks | alignleft " +
@@ -89,6 +90,8 @@ const ArticleEditor = () => {
                 success([]); // tetap panggil success biar TinyMCE gak error
               }
             },
+
+            
 
             content_style:
               "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",

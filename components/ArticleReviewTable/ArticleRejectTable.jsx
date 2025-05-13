@@ -7,7 +7,14 @@ import {
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
-import { formatDistanceToNow } from "date-fns";
+import {
+  formatDistanceToNow,
+  isToday,
+  isYesterday,
+  differenceInDays,
+  parseISO,
+} from "date-fns";
+import { id } from "date-fns/locale"; // untuk Bahasa Indonesia
 import Swal from "sweetalert2";
 import { useBackend } from "@/context/BackContext";
 import ArticlePreviewModal from "@/components/ArticlePreviewModal";
@@ -135,14 +142,29 @@ const ArticleRejectTable = () => {
         <thead>
           <tr>
             <th className="border-b p-4"></th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("title")}>
-              <div className="flex items-center gap-1">Judul {getSortIcon("title")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("title")}
+            >
+              <div className="flex items-center gap-1">
+                Judul {getSortIcon("title")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("author")}>
-              <div className="flex items-center gap-1">Penulis {getSortIcon("author")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("author")}
+            >
+              <div className="flex items-center gap-1">
+                Penulis {getSortIcon("author")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("date")}>
-              <div className="flex items-center gap-1">Tanggal {getSortIcon("date")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("date")}
+            >
+              <div className="flex items-center gap-1">
+                Tanggal {getSortIcon("date")}
+              </div>
             </th>
             <th className="border-b p-4">Aksi</th>
           </tr>
@@ -164,9 +186,25 @@ const ArticleRejectTable = () => {
                 {article.author?.username || "Tidak Diketahui"}
               </td>
               <td className="border-b p-4">
-                {article.date
-                  ? formatDistanceToNow(new Date(article.date), { addSuffix: true })
-                  : "Tanggal tidak tersedia"}
+                {(() => {
+                  const date = new Date(article.date);
+                  if (isToday(date)) {
+                    return "Hari ini";
+                  } else if (isYesterday(date)) {
+                    return "Kemarin";
+                  } else if (differenceInDays(new Date(), date) <= 2) {
+                    return formatDistanceToNow(date, {
+                      addSuffix: true,
+                      locale: id,
+                    });
+                  } else {
+                    return date.toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "short", // Jan, Feb, Mar, dst.
+                      year: "numeric",
+                    });
+                  }
+                })()}
               </td>
               <td className="border-b p-4 flex gap-2">
                 <button
@@ -194,21 +232,25 @@ const ArticleRejectTable = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-4 py-2 ${currentPage === 1
-            ? "bg-gray-300 cursor-not-allowed"
-            : "bg-gray-200 hover:bg-gray-300"
-            }`}
+          className={`px-4 py-2 ${
+            currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
         >
           Previous
         </button>
-        <span>Page {currentPage} of {totalPages}</span>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 ${currentPage === totalPages
-            ? "bg-gray-300 cursor-not-allowed"
-            : "bg-gray-200 hover:bg-gray-300"
-            }`}
+          className={`px-4 py-2 ${
+            currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
         >
           Next
         </button>

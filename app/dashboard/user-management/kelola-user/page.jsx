@@ -148,7 +148,7 @@ const ManageUsers = () => {
       <div className="kelola-tambah-user flex justify-between items-center">
         <h1 className="text-2xl font-bold">Kelola Pengguna</h1>
         <button
-          className="p-3 bg-blue-500 text-white  hover:bg-blue-600 rounded-lg"
+          className="p-3 bg-pink-500 text-white  hover:bg-pink-600 rounded-lg"
           onClick={() => setIsModalOpen(true)}
         >
           + Tambah user

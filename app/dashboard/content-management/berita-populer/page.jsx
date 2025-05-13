@@ -107,7 +107,7 @@ const PopularNewsPage = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openReplacePopup(index)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-pink-500 hover:text-pink-700"
                   >
                     <FaExchangeAlt size={18} />
                   </button>

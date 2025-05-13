@@ -243,7 +243,7 @@ const HeadlinePage = () => {
         {isLoadingHeadlines ? (
           <ArticleListSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid 2xl:grid-cols-4 xl:grid-cols-4 lg:grid-cols-4 grid-cols-1 gap-4">
             {headlines.map((headline, index) => (
               <div
                 key={headline.article_id}
@@ -278,7 +278,7 @@ const HeadlinePage = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => openReplacePopup(index)}
-                      className="text-blue-500 hover:text-blue-700"
+                      className="text-pink-500 hover:text-pink-700"
                     >
                       <FaExchangeAlt size={18} />
                     </button>
@@ -335,7 +335,7 @@ const HeadlinePage = () => {
       <div className="mt-4">
         <button
           onClick={handleSaveHeadlines}
-          className="px-6 py-3 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-700"
+          className="px-6 py-3 bg-pink-500 text-white rounded-md shadow-md hover:bg-pink-700"
         >
           Simpan
         </button>

@@ -24,7 +24,7 @@ const AdvertisingPage = () => {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Active Advertising</h1>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <button className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700">
             Tambah Advertising
           </button>
         </div>

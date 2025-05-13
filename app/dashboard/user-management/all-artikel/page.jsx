@@ -56,7 +56,7 @@ const ArticleReviewPage = () => {
   
 
   return (
-    <div className="p-6">
+    <div className="p-6 2xl:w-full xl:w-full lg:w-full md:w-full w-[390px]">
      {isLoading ? (
   <ArticleListSkeleton count={6} />
 ) : (

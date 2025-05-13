@@ -3,8 +3,8 @@ export const userStats = {
     categories: ["Crypto News", "Business", "Technology", "NFT"],
     stats: {
       totalArticles: 0, // Akan dihitung otomatis dari kategori
-      totalViews: 5600,
-      totalEarnings: 13.462,
+      totalViews: 0,
+      totalEarnings: 0,
       barData: {
         dailyLabels: ["2024-06-01", "2024-06-02", "2024-06-03"],
         weeklyLabels: ["Week 1", "Week 2", "Week 3"],
@@ -97,8 +97,8 @@ export const userStats = {
     categories: ["Crypto News", "Business", "Technology", "NFT"],
     stats: {
       totalArticles: 0, // Akan dihitung otomatis dari kategori
-      totalViews: 5600,
-      totalEarnings: 13.462,
+      totalViews: 0,
+      totalEarnings: 0,
       barData: {
         dailyLabels: ["2024-06-01", "2024-06-02", "2024-06-03"],
         weeklyLabels: ["Week 1", "Week 2", "Week 3"],
@@ -191,8 +191,8 @@ export const userStats = {
     categories: ["Crypto News", "Business", "Technology", "NFT"],
     stats: {
       totalArticles: 0, // Akan dihitung otomatis dari kategori
-      totalViews: 5600,
-      totalEarnings: 12345,
+      totalViews: 0,
+      totalEarnings: 0,
       barData: {
         dailyLabels: ["2024-06-01", "2024-06-02", "2024-06-03"],
         weeklyLabels: ["Week 1", "Week 2", "Week 3"],

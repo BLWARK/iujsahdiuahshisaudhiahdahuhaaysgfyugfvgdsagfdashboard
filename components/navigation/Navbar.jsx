@@ -42,7 +42,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between bg-main text-white h-[113px] 2xl:px-10 xl:px-10 lg:px-10 px-3 shadow-lg">
+      <div className="flex items-center justify-between bg-gray-700 text-white h-[113px] 2xl:px-10 xl:px-10 lg:px-10 px-3 shadow-lg">
         <div className="flex justify-start items-start gap-4">
           {/* Hamburger Menu untuk membuka Sidebar */}
           <button onClick={toggleSidebar} className="2xl:hidden text-white p-2">

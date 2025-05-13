@@ -18,7 +18,7 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-main">
+    <div className="flex items-center justify-center h-screen bg-pink-500">
       {isLoading && (
         <div className="flex flex-col items-center justify-center animate-fade-in">
           <div className="relative w-64 h-64">

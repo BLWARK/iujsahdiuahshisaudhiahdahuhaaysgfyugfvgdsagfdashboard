@@ -6,7 +6,7 @@ import { useBackend } from "@/context/BackContext";
 import ArticleListSkeleton from "@/components/ArticleListSkeleton";
 
 const KelolaArtikel = () => {
-  const { articles, getArticles, selectedPortal, setSelectedPortal } = useBackend();
+  const { getAuthorArticles, selectedPortal, setSelectedPortal } = useBackend();
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false); // 🔥 Mencegah pemanggilan ulang API
   const router = useRouter();
@@ -15,20 +15,21 @@ const KelolaArtikel = () => {
   // ✅ Bungkus getArticles dengan useCallback agar tidak selalu berubah
   const fetchArticles = useCallback(async () => {
     if (!selectedPortal?.platform_id || isFetching || hasFetched.current) return;
-
+  
     console.log("🔄 Memanggil API untuk platform_id:", selectedPortal.platform_id);
     setIsFetching(true);
-    
+  
     try {
-      await getArticles(selectedPortal.platform_id);
+      await getAuthorArticles(); // ✅ Ganti ini
     } catch (err) {
       console.error("❌ Error saat memanggil API:", err);
     } finally {
       setIsFetching(false);
       setIsLoading(false);
-      hasFetched.current = true; // ✅ Tandai bahwa fetch telah dilakukan
+      hasFetched.current = true;
     }
-  }, [selectedPortal, getArticles, isFetching]);
+  }, [selectedPortal, getAuthorArticles, isFetching]);
+  
 
   // ✅ Panggil API hanya jika selectedPortal tersedia
   useEffect(() => {
@@ -46,15 +47,15 @@ const KelolaArtikel = () => {
   
 
   return (
-    <div className="p-6 space-y-6">
-    <h1 className="text-3xl font-bold mb-4">
+    <div className="p-6 space-y-6 w-full">
+    <h1 className="2xl:text-3xl xl:text-3xl lg:text-3xl text-xs  font-bold mb-4">
       Kelola Artikel 
     </h1>
 
     {isLoading ? (
       <ArticleListSkeleton count={10} />
     ) : (
-      <ArticleTable articles={articles} />
+      <ArticleTable/>
     )}
   </div>
   );

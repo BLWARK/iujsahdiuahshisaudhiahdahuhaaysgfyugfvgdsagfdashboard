@@ -8,7 +8,15 @@ import {
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
-import { formatDistanceToNow } from "date-fns";
+import {
+  formatDistanceToNow,
+  isToday,
+  isYesterday,
+  differenceInDays,
+  parseISO,
+} from "date-fns";
+import { id } from "date-fns/locale"; // untuk Bahasa Indonesia
+
 import Swal from "sweetalert2";
 import { useBackend } from "@/context/BackContext";
 import ArticlePreviewModal from "@/components/ArticlePreviewModal"; // ✅ pakai komponen modal buatanmu
@@ -139,7 +147,7 @@ const ArticlePublishTable = () => {
 
   return (
     <div>
-      <table className="w-full text-left border-collapse">
+      <table className="2xl:w-full xl:w-full lg:w-full w-[380px] text-left border-collapse overflow-x-scroll">
         <thead>
           <tr>
             <th className="border-b p-4"></th>
@@ -187,12 +195,27 @@ const ArticlePublishTable = () => {
                 {article.author?.username || "Tidak Diketahui"}
               </td>
               <td className="border-b p-4">
-                {article.date
-                  ? formatDistanceToNow(new Date(article.date), {
+                {(() => {
+                  const date = new Date(article.date);
+                  if (isToday(date)) {
+                    return "Hari ini";
+                  } else if (isYesterday(date)) {
+                    return "Kemarin";
+                  } else if (differenceInDays(new Date(), date) <= 2) {
+                    return formatDistanceToNow(date, {
                       addSuffix: true,
-                    })
-                  : "Tanggal tidak tersedia"}
+                      locale: id,
+                    });
+                  } else {
+                    return date.toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "short", // Jan, Feb, Mar, dst.
+                      year: "numeric",
+                    });
+                  }
+                })()}
               </td>
+
               <td className="border-b p-4 flex gap-2">
                 <button
                   className="text-blue-500 hover:text-blue-700"

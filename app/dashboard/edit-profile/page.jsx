@@ -17,7 +17,7 @@ const ProfilePage = () => {
           onClick={() => setActiveTab("profile")}
           className={`px-4 py-2 rounded-md ${
             activeTab === "profile"
-              ? "bg-blue-600 text-white"
+              ? "bg-pink-600 text-white"
               : "bg-gray-200 text-gray-800"
           }`}
         >
@@ -27,7 +27,7 @@ const ProfilePage = () => {
           onClick={() => setActiveTab("security")}
           className={`px-4 py-2 rounded-md ${
             activeTab === "security"
-              ? "bg-blue-600 text-white"
+              ? "bg-pink-600 text-white"
               : "bg-gray-200 text-gray-800"
           }`}
         >

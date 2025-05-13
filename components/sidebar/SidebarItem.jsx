@@ -41,7 +41,7 @@ const SidebarItem = ({ item, pathname, openSubMenu, toggleSubMenu, toggleSidebar
                   href={child.href}
                   className={`block p-2 pl-8 rounded-md transition-all duration-300 ${
                     pathname.startsWith(child.href)
-                      ? "bg-blue-500 text-white"
+                      ? "bg-pink-500 text-white"
                       : "hover:bg-gray-700"
                   }`}
                   onClick={toggleSidebar} // **Sidebar tertutup setelah klik menu**
@@ -56,7 +56,7 @@ const SidebarItem = ({ item, pathname, openSubMenu, toggleSubMenu, toggleSidebar
         <Link
           href={item.href}
           className={`flex items-center gap-2 p-4 rounded-md transition-all duration-300 ${
-            isActive ? "bg-blue-600 text-white" : "hover:bg-gray-700"
+            isActive ? "bg-pink-600 text-white" : "hover:bg-gray-700"
           }`}
           onClick={toggleSidebar} // **Sidebar tertutup setelah klik menu**
         >

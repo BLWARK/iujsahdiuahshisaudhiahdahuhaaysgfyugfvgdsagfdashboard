@@ -2,14 +2,21 @@
 import React, { useEffect, useState } from "react";
 import {
   AiOutlineEdit,
-  AiOutlineDelete,
   AiOutlineEye,
   AiOutlineCheck,
   AiOutlineClose,
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
-import { formatDistanceToNow } from "date-fns";
+import {
+  formatDistanceToNow,
+  isToday,
+  isYesterday,
+  differenceInDays,
+  parseISO,
+} from "date-fns";
+
+import { id } from "date-fns/locale"; // untuk Bahasa Indonesia
 import Swal from "sweetalert2";
 import he from "he";
 import { useRouter } from "next/navigation";
@@ -29,7 +36,10 @@ const ArticlePendingTable = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [meta, setMeta] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
   const [notification, setNotification] = useState("");
   const [previewArticle, setPreviewArticle] = useState(null);
 
@@ -133,14 +143,29 @@ const ArticlePendingTable = () => {
         <thead>
           <tr>
             <th className="border-b p-4">#</th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("title")}>
-              <div className="flex items-center gap-1">Judul {getSortIcon("title")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("title")}
+            >
+              <div className="flex items-center gap-1">
+                Judul {getSortIcon("title")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("author")}>
-              <div className="flex items-center gap-1">Penulis {getSortIcon("author")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("author")}
+            >
+              <div className="flex items-center gap-1">
+                Penulis {getSortIcon("author")}
+              </div>
             </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("date")}>
-              <div className="flex items-center gap-1">Tanggal {getSortIcon("date")}</div>
+            <th
+              className="border-b p-4 cursor-pointer"
+              onClick={() => handleSort("date")}
+            >
+              <div className="flex items-center gap-1">
+                Tanggal {getSortIcon("date")}
+              </div>
             </th>
             <th className="border-b p-4">Aksi</th>
           </tr>
@@ -158,11 +183,29 @@ const ArticlePendingTable = () => {
                 </button>
               </td>
               <td className="border-b p-4">{article.title}</td>
-              <td className="border-b p-4">{article.author?.username || "-"}</td>
               <td className="border-b p-4">
-                {article.date
-                  ? formatDistanceToNow(new Date(article.date), { addSuffix: true })
-                  : "-"}
+                {article.author?.username || "-"}
+              </td>
+              <td className="border-b p-4">
+                {(() => {
+                  const date = new Date(article.date);
+                  if (isToday(date)) {
+                    return "Hari ini";
+                  } else if (isYesterday(date)) {
+                    return "Kemarin";
+                  } else if (differenceInDays(new Date(), date) <= 2) {
+                    return formatDistanceToNow(date, {
+                      addSuffix: true,
+                      locale: id,
+                    });
+                  } else {
+                    return date.toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "short", // Jan, Feb, Mar, dst.
+                      year: "numeric",
+                    });
+                  }
+                })()}
               </td>
               <td className="border-b p-4 flex gap-2">
                 <button

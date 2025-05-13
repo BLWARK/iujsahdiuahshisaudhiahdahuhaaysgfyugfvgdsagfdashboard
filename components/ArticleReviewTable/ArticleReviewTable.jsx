@@ -9,22 +9,22 @@ const ArticleReview = () => {
   return (
     <div>
       {/* ✅ Navigasi Tab */}
-      <div className="flex gap-4 mb-4 border-b border-b-gray-300 pb-6">
+      <div className="flex gap-4 mb-4 border-b border-b-gray-300 pb-6 w-[380px]">
         <button
           onClick={() => setActiveTab("publish")}
-          className={activeTab === "publish" ? "font-bold p-4 bg-blue-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
+          className={activeTab === "publish" ? "font-bold p-4 bg-pink-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
         >
           Published
         </button>
         <button
           onClick={() => setActiveTab("pending")}
-          className={activeTab === "pending" ? "font-bold p-4 bg-blue-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
+          className={activeTab === "pending" ? "font-bold p-4 bg-pink-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
         >
           Pending
         </button>
         <button
           onClick={() => setActiveTab("reject")}
-          className={activeTab === "reject" ? "font-bold p-4 bg-blue-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
+          className={activeTab === "reject" ? "font-bold p-4 bg-pink-500 text-white rounded-lg" : "border border-gray-400 p-4 rounded-lg text-gray-800"}
         >
           Rejected
         </button>

@@ -93,7 +93,7 @@ const PlatformAccessModal = ({ userId, isOpen, onClose }) => {
           <button
             onClick={handleSave}
             disabled={isSubmitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700"
           >
             {isSubmitting ? "Menyimpan..." : "Simpan"}
           </button>

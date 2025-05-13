@@ -15,6 +15,7 @@ import ArticlePreviewModal from "@/components/ArticlePreviewModal";
 const ArticleTable = () => {
   const {
     articles,
+    getAuthorArticles,
     getArticles,
     selectedPortal,
     user,
@@ -35,20 +36,23 @@ const ArticleTable = () => {
   const articlesPerPage = 15;
 
   useEffect(() => {
-    if (selectedPortal?.platform_id) {
-      getArticles(selectedPortal.platform_id)
+    if (selectedPortal?.platform_id && user?.user_id) {
+      getAuthorArticles()
         .then(() => setIsLoading(false))
         .catch((err) => console.error("❌ Gagal memuat artikel:", err));
     }
-  }, [selectedPortal, getArticles]);
+  }, [selectedPortal, user]); // ✅ FIX: jangan masukkan getAuthorArticles
+  
+  
 
   const filteredArticles = Array.isArray(articles)
-    ? articles.filter(
-        (article) =>
-          article.platform_id === selectedPortal?.platform_id &&
-          article.author_id === user?.user_id
-      )
-    : [];
+  ? articles.filter(
+      (article) =>
+        article.platform_id === selectedPortal?.platform_id &&
+        article.author_id === user?.user_id
+    )
+  : [];
+
 
   const sortedArticles = filteredArticles.sort((a, b) => {
     const valueA = a[sortColumn];
@@ -123,11 +127,11 @@ const ArticleTable = () => {
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md w-full">
+    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
       <h2 className="text-2xl font-bold mb-6">
         Daftar Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
       </h2>
-      <table className="w-full text-left border-collapse">
+      <table className="w-full text-left border-collapse overflow-x-scroll">
         <thead>
           <tr>
             <th className="border-b p-4">#</th>

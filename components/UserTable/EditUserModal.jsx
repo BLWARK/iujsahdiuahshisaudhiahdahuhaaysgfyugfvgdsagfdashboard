@@ -171,7 +171,7 @@ const EditUserModal = ({ isOpen, userData, onClose, onUpdate }) => {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="px-4 py-2 bg-pink-600 text-white rounded"
           >
             Simpan
           </button>

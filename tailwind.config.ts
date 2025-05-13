@@ -15,7 +15,7 @@ export default {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
       colors: {
-        main: "#00245A",        // Warna utama
+        main: "#1c1c1c",        // Warna utama
         secondary: "#E0E420",    // Warna sekunder
         hover: "#D4365F",       
         background: "var(--background)",

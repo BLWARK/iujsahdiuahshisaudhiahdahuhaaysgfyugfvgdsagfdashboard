@@ -250,7 +250,7 @@ const replaceArticle = (article) => {
         {isLoadingEditorChoices ? (
           <p className="text-center text-gray-500">Loading artikel...</p>
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid 2xl:grid-cols-4 xl:grid-cols-4 lg:grid-cols-4 grid-cols-1 gap-4">
             {editorChoices.map((choice, index) => (
               <div
                 key={choice.article_id}
@@ -341,7 +341,7 @@ const replaceArticle = (article) => {
       <div className="mt-4">
         <button
           onClick={handleSaveEditorChoices}
-          className="px-6 py-3 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-700"
+          className="px-6 py-3 bg-pink-500 text-white rounded-md shadow-md hover:bg-pink-700"
         >
           Simpan
         </button>

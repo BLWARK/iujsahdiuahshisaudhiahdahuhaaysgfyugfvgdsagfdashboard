@@ -25,8 +25,9 @@ export const BackProvider = ({ children }) => {
   const [articles, setArticles] = useState([]);
   const [selectedPortal, setSelectedPortal] = useState(null);
   const [isSuccessPopup, setSuccessPopup] = useState(false); // ✅ State untuk kontrol popup sukses
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [draftMeta, setDraftMeta] = useState({ totalItems: 0 });
- 
 
   const [articleData, setArticleData] = useState({
     platform_id: null,
@@ -129,39 +130,39 @@ export const BackProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await customPost("/api/login", { email, password });
-  
+
       if (response?.user?.status === "suspended") {
         return {
           success: false,
           message: "Akun Anda disuspend. Silakan hubungi admin.",
         };
       }
-  
+
       if (response?.token && response?.user) {
         const expiresAt = new Date().getTime() + 8 * 60 * 60 * 1000;
-  
+
         localStorage.setItem("token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("currentUser", JSON.stringify(response.user));
         localStorage.setItem("platforms", JSON.stringify(response.platforms));
         localStorage.setItem("expiresAt", expiresAt.toString());
-  
+
         setToken(response.token);
         setUser(response.user);
         setRole(response.user.role || "Guest");
         setPlatforms(response.platforms);
-  
+
         setArticleData((prev) => ({
           ...prev,
           author_id: response.user.user_id,
           platform_id: response.platforms?.[0]?.platform_id || null,
         }));
-  
+
         router.push("/select-portal");
-  
+
         return { success: true };
       }
-  
+
       return {
         success: false,
         message: "Email atau password salah. Silakan coba lagi.",
@@ -169,18 +170,27 @@ export const BackProvider = ({ children }) => {
     } catch (error) {
       // ✅ Ambil pesan dari backend jika tersedia
       const msg = error?.response?.data?.message;
-  
+
       if (msg === "Invalid credentials") {
-        return { success: false, message: "Email atau password salah. Silakan coba lagi." };
+        return {
+          success: false,
+          message: "Email atau password salah. Silakan coba lagi.",
+        };
       }
-  
+
       if (msg === "User is suspended") {
-        return { success: false, message: "Akun Anda disuspend. Silakan hubungi admin." };
+        return {
+          success: false,
+          message: "Akun Anda disuspend. Silakan hubungi admin.",
+        };
       }
       if (msg === "Database error") {
-        return { success: false, message: "Gagal Login Silahkan cek email dan password anda" };
+        return {
+          success: false,
+          message: "Gagal Login Silahkan cek email dan password anda",
+        };
       }
-  
+
       // Fallback jika pesan tidak dikenal
       return {
         success: false,
@@ -188,7 +198,6 @@ export const BackProvider = ({ children }) => {
       };
     }
   };
-  
 
   // ✅ Fungsi untuk menyimpan draft artikel
   const saveDraft = async () => {
@@ -241,9 +250,10 @@ export const BackProvider = ({ children }) => {
 
   const saveEditedDraft = async (articleId, articleData) => {
     try {
-      const { imageFile, author, created_at, updated_at, ...rest } = articleData;
+      const { imageFile, author, created_at, updated_at, ...rest } =
+        articleData;
       let imageUrl = null;
-  
+
       if (imageFile) {
         try {
           imageUrl = await uploadImage(imageFile);
@@ -251,7 +261,7 @@ export const BackProvider = ({ children }) => {
           console.error("❌ Gagal upload gambar:", error);
         }
       }
-  
+
       const payload = {
         ...rest,
         image: imageUrl || articleData.image || "",
@@ -266,7 +276,7 @@ export const BackProvider = ({ children }) => {
               .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
           : [],
       };
-  
+
       const response = await customPut(`/api/articles/${articleId}`, payload);
       console.log("✅ Draft berhasil disimpan:", response);
       return response;
@@ -275,28 +285,29 @@ export const BackProvider = ({ children }) => {
       throw error;
     }
   };
-  
-  
+
   // ✅ Fungsi untuk submit artikel dengan upload gambar dan update
   const submitArticle = async () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     const userId = user?.user_id || storedUser?.user_id || null;
     const platformId = selectedPortal?.platform_id;
-  
+
     if (!platformId || !userId) {
-      alert("❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel.");
+      alert(
+        "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
+      );
       return;
     }
-  
+
     const platformIdInt = parseInt(platformId, 10);
     if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
       alert("❌ Platform ID tidak valid.");
       return;
     }
-  
+
     const { imageFile, ...articleWithoutImage } = articleData || {};
     let imageUrl = null;
-  
+
     if (imageFile) {
       try {
         imageUrl = await uploadImage(imageFile);
@@ -306,7 +317,7 @@ export const BackProvider = ({ children }) => {
         return;
       }
     }
-  
+
     try {
       const payload = {
         ...articleWithoutImage,
@@ -314,6 +325,7 @@ export const BackProvider = ({ children }) => {
         platform_id: platformIdInt,
         image: imageUrl || "",
         status: "Pending",
+        description: articleWithoutImage.description || "",
         tags: Array.isArray(articleWithoutImage.tags)
           ? articleWithoutImage.tags.map((tag) =>
               tag.trim().toLowerCase().replace(/\s+/g, "-")
@@ -324,14 +336,14 @@ export const BackProvider = ({ children }) => {
               .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
           : [],
       };
-  
+
       const response = await customPost("/api/articles", payload);
       const articleId = response?.article_id || response?._id;
-  
+
       if (!articleId) {
         throw new Error("Gagal mendapatkan article_id dari response.");
       }
-  
+
       console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
       return articleId;
     } catch (error) {
@@ -340,7 +352,6 @@ export const BackProvider = ({ children }) => {
       throw error;
     }
   };
-  
 
   const saveHeadlines = async (headlines, headlineCategory = "HOME") => {
     if (!selectedPortal?.platform_id) {
@@ -426,8 +437,7 @@ export const BackProvider = ({ children }) => {
 
   // ✅ Fungsi untuk mengambil artikel berdasarkan platform_id
   // Di BackProvider
-  const getArticles = useCallback(
-    async (platformId, page = 1, limit = 10) => {
+  const getArticles = useCallback(async (platformId, page = 1, limit = 10) => {
     if (!platformId) return;
     try {
       const response = await customGet(
@@ -437,23 +447,25 @@ export const BackProvider = ({ children }) => {
       return response;
     } catch (error) {
       console.error("Error fetching articles:", error);
-      throw error; } },
-      []
-  ); // dependency kosong, jika tidak tergantung pada state lain
+      throw error;
+    }
+  }, []); // dependency kosong, jika tidak tergantung pada state lain
 
   const getArticlesLink = useCallback(
     async (platformId, page = 1, limit = 15) => {
-    if (!platformId) return;
-    try {
-      const response = await customGet(
-        `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=all`
-      );
-      setArticles(response.data);
-      return response;
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      throw error; } },
-      []
+      if (!platformId) return;
+      try {
+        const response = await customGet(
+          `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=all`
+        );
+        setArticles(response.data);
+        return response;
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+        throw error;
+      }
+    },
+    []
   ); // dependency kosong, jika tidak tergantung pada state lain
 
   const getArticlesPublish = useCallback(
@@ -527,7 +539,20 @@ export const BackProvider = ({ children }) => {
     }
   };
 
-  
+  const getAuthorArticles = useCallback(async () => {
+    if (!selectedPortal?.platform_id || !user?.user_id) return;
+
+    try {
+      const response = await customGet(
+        `/api/articles?platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=1&limit=50&status=all`
+      );
+      setArticles(response?.data || []);
+      setDraftMeta(response.meta);
+    } catch (error) {
+      console.error("❌ Error fetching author articles:", error);
+    }
+  }, [selectedPortal?.platform_id, user?.user_id]);
+
   // ✅ Fungsi untuk mengambil kategori berdasarkan platform_id
   const getCategoriesByPlatformId = async (platformId) => {
     if (!platformId) return [];
@@ -636,7 +661,6 @@ export const BackProvider = ({ children }) => {
             .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
         : [],
     };
-    
 
     try {
       const response = await customPut(`/api/articles/${articleId}`, payload);
@@ -750,60 +774,56 @@ export const BackProvider = ({ children }) => {
   const getAllPlatforms = async () => {
     try {
       const response = await customGet("/api/platforms");
-  
+
       // FIX di sini
       const allPlatforms = Array.isArray(response?.data) ? response.data : [];
-  
+
       const uniquePlatforms = [];
       const seen = new Set();
-  
+
       for (const platform of allPlatforms) {
         if (platform && !seen.has(platform.platform_id)) {
           seen.add(platform.platform_id);
           uniquePlatforms.push(platform);
         }
       }
-  
+
       return uniquePlatforms;
     } catch (error) {
       console.error("❌ Gagal mengambil daftar platform:", error);
       return [];
     }
   };
-  
-  
 
   // Di BackContext: tambahkan fungsi ini (kalau belum ada)
   const getPlatformAccessByUser = async (userId) => {
-  try {
-    const res = await customGet(`/api/platform-access?user_id=${userId}`);
-    return res?.data || [];
-  } catch (error) {
-    console.error("❌ Gagal mengambil platform access user:", error);
-    return [];
-  }
+    try {
+      const res = await customGet(`/api/platform-access?user_id=${userId}`);
+      return res?.data || [];
+    } catch (error) {
+      console.error("❌ Gagal mengambil platform access user:", error);
+      return [];
+    }
   };
 
   const getPlatformAccessByUserId = async (userId) => {
-  try {
-    const res = await customGet(`/api/platform-access?user_id=${userId}`);
-    return Array.isArray(res?.data) ? res.data : [];
-  } catch (err) {
-    console.error("❌ Gagal ambil akses platform:", err);
-    return [];
-  }
+    try {
+      const res = await customGet(`/api/platform-access?user_id=${userId}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch (err) {
+      console.error("❌ Gagal ambil akses platform:", err);
+      return [];
+    }
   };
-
 
   const createUser = async (payload) => {
-  try {
-    const res = await customPost("/api/users", payload); // ⬅️ langsung kirim payload, JANGAN destruktur tanpa platform_ids
-    return res.data;
-  } catch (err) {
-    throw err;
-  }
+    try {
+      const res = await customPost("/api/users", payload); // ⬅️ langsung kirim payload, JANGAN destruktur tanpa platform_ids
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
   };
-
 
   const getUserById = async (userId) => {
     try {
@@ -814,7 +834,7 @@ export const BackProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   const deletePlatformAccessByUserId = async (userId) => {
     try {
       await customDelete(`/api/platform-access/${userId}`); // endpoint-nya bisa disesuaikan
@@ -823,8 +843,6 @@ export const BackProvider = ({ children }) => {
       throw error;
     }
   };
-  
-  
 
   const deleteUserById = async (userId) => {
     try {
@@ -834,15 +852,18 @@ export const BackProvider = ({ children }) => {
     } catch (error) {
       // Jangan tampilkan error lengkap di console untuk user biasa
       // console.error("❌ Gagal menghapus user:", error);
-  
+
       // Bisa ganti dengan pesan aman untuk developer (opsional)
-      console.warn("❌ Gagal menghapus user. Pastikan platform access dihapus terlebih dahulu.");
-  
+      console.warn(
+        "❌ Gagal menghapus user. Pastikan platform access dihapus terlebih dahulu."
+      );
+
       // Tetap lempar error agar handler di UI bisa tangani swal-nya
-      throw new Error("Gagal menghapus user. Silakan hapus akses platform dari menu edit.");
+      throw new Error(
+        "Gagal menghapus user. Silakan hapus akses platform dari menu edit."
+      );
     }
   };
-  
 
   const addPlatformAccess = async (userId, platformId) => {
     try {
@@ -867,31 +888,22 @@ export const BackProvider = ({ children }) => {
       throw error;
     }
   };
-  
 
-  
-  
   const updateUsers = async (userData) => {
     const userId = userData.user_id;
     if (!userId) throw new Error("User ID tidak tersedia");
-  
+
     const { user_id, ...payload } = userData;
-  
+
     try {
-      const response = await customPut(`/api/users/${userId}`, payload, {
-       
-      });
-  
+      const response = await customPut(`/api/users/${userId}`, payload, {});
+
       return response?.data;
     } catch (error) {
       console.error("❌ Gagal update user:", error);
       throw error;
     }
   };
-  
-  
-  
-  
 
   const updateProfile = async (updatedUser) => {
     try {
@@ -1005,6 +1017,26 @@ export const BackProvider = ({ children }) => {
     }
   };
 
+  const searchArticles = useCallback(async (query, platformId) => {
+    if (!query) return [];
+  
+    const finalPlatformId =
+      platformId ||
+      JSON.parse(localStorage.getItem("selectedPortal") || "{}")?.platform_id ||
+      1;
+  
+    try {
+      const response = await customGet(
+        `/api/articles?search=${encodeURIComponent(query)}&platform_id=${finalPlatformId}`
+      );
+      return response?.data || [];
+    } catch (error) {
+      console.error("❌ Failed to search articles:", error);
+      return [];
+    }
+  }, []);
+  
+
   // ✅ Fungsi Logout
   const logout = () => {
     localStorage.removeItem("token");
@@ -1071,7 +1103,11 @@ export const BackProvider = ({ children }) => {
       getPlatformAccessByUserId,
       updateUsers,
       updateUserPlatformAccess,
-      deletePlatformAccessByUserId
+      deletePlatformAccessByUserId,
+      getAuthorArticles,
+      searchArticles,
+      searchResults,
+      searchLoading,
     }),
     [
       user,

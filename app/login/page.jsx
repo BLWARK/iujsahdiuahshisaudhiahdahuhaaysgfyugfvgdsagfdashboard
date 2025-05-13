@@ -21,10 +21,10 @@ export default function LoginPage() {
       {isOpening && (
         <div className="absolute inset-0 z-50 flex">
           {/* Tirai Kiri */}
-          <div className="w-1/2 bg-main animate-slide-left"></div>
+          <div className="w-1/2 bg-pink-500 animate-slide-left"></div>
 
           {/* Tirai Kanan */}
-          <div className="w-1/2 bg-main animate-slide-right"></div>
+          <div className="w-1/2 bg-pink-500 animate-slide-right"></div>
         </div>
       )}
 
@@ -36,9 +36,9 @@ export default function LoginPage() {
             <p  className="text-gray-200 bg-red-700 p-3 py-10 rounded-lg 2xl:hidden xl:hidden lg:hidden text-center justify-center items-center gap-4 flex flex-col"> <IoWarning className="text-[100px] justify-center items-center flex animate-pulse" />For the best experience please use Desktop or Tablet Device</p>
             <div className="w-full flex flex-col justify-center items-center">
               {/* Logo */}
-              <div className="relative w-[200px] h-[100px]">
+              <div className="relative w-[180px] h-[100px]">
                 <Image
-                  src="/Logo2.png"
+                  src="/Logo XYZone-Solid.png"
                   alt="Logo"
                   fill
                   priority
@@ -62,7 +62,7 @@ export default function LoginPage() {
         </div>
 
         {/* Bagian Kanan: GIF Animasi */}
-        <div className="hidden md:flex w-1/2 bg-blue-600 justify-center items-center">
+        <div className="hidden md:flex w-1/2 bg-pink-400 justify-center items-center">
           <div className="relative w-[640px] h-[360px]">
             <Image
               src="/cz.gif"

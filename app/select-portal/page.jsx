@@ -65,7 +65,7 @@ export default function SelectPortal() {
   };
 
   return (
-    <div className="fixed inset-0  pb-20 flex items-center justify-center bg-main z-50 overflow-y-visible">
+    <div className="fixed inset-0  pb-20 flex items-center justify-center bg-pink-500 z-50 overflow-y-visible">
       <div className="bg-white px-6 py-10  md:px-12 md:py-16 rounded-lg shadow-2xl w-full max-w-xl relative">
         <button
           onClick={handleClose}
@@ -81,7 +81,7 @@ export default function SelectPortal() {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-20">
-            <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="flex justify-center mb-8">
@@ -92,7 +92,7 @@ export default function SelectPortal() {
                 handleSelectPortal(selected);
               }}
               value={selectedPortal?.platform_id || ""}
-              className="w-full md:w-3/4 px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full md:w-3/4 px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500"
             >
               <option value="" disabled>
                 -- Pilih Provinsi --
@@ -120,7 +120,7 @@ export default function SelectPortal() {
             disabled={!selectedPortal}
             className={`w-full md:w-auto px-8 py-3 text-lg font-semibold rounded-md transition-all duration-200 ${
               selectedPortal
-                ? "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-pink-600 text-white hover:bg-pink-700"
                 : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }`}
           >

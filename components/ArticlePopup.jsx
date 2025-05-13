@@ -61,7 +61,7 @@ const ArticlePopup = ({ articles = [], meta = { page: 1, totalPages: 1 }, onClos
                 <span className="text-sm">{article.title}</span>
                 <button
                   onClick={() => onSelect(article)}
-                  className="text-white bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded-md text-sm"
+                  className="text-white bg-pink-500 hover:bg-pink-600 px-2 py-1 rounded-md text-sm"
                 >
                   Pilih
                 </button>

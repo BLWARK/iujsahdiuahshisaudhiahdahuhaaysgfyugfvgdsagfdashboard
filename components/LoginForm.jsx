@@ -66,7 +66,7 @@ export default function LoginForm() {
         type="submit"
         disabled={loading}
         className={`w-full ${
-          loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+          loading ? "bg-gray-400" : "bg-pink-500 hover:bg-pink-700"
         } text-white py-2 rounded-md`}
       >
         {loading ? "Logging in..." : "Log in"}
