@@ -104,9 +104,18 @@ const TambahArtikel = () => {
   const [now, setNow] = useState("");
 
   useEffect(() => {
-    const current = DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm");
-    setNow(current);
-  }, []);
+  const now = DateTime.now();
+  const defaultSchedule = now.plus({ hours: 0 }).toISO(); // jadwal default +1 jam
+
+  setNow(now.toFormat("yyyy-MM-dd'T'HH:mm"));
+
+  // hanya set jika belum ada jadwal dari articleData
+  if (!articleData.scheduled_at) {
+    updateArticleData("scheduled_at", defaultSchedule);
+    setSelectedDate(DateTime.fromISO(defaultSchedule).toFormat("yyyy-MM-dd'T'HH:mm"));
+  }
+}, []);
+
 
   // ✅ Pastikan platform_id ada sebelum submit
   const handleSubmitArticle = async () => {
@@ -416,7 +425,7 @@ const TambahArtikel = () => {
         </div>
 
         <div>
-          <label className="block mb-2 font-medium">🗓️ Jadwal Publikasi:</label>
+          <label className="block mb-2 font-medium">🗓️ Tanggal Publikasi:</label>
           <input
             type="datetime-local"
             value={selectedDate || formatDateForInput(articleData.scheduled_at)}

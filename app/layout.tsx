@@ -11,8 +11,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Coinzone Dashboard",
-  description: "Coinzone Media",
+  title: "Dashboard XYZONE",
+  description: "XYZONE Media",
 };
 
 export default function RootLayout({

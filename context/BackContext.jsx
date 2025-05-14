@@ -606,7 +606,7 @@ export const BackProvider = ({ children }) => {
 
     try {
       const response = await customGet(
-        `/api/articles?platform_id=${platformId}&category=${category}&page=${page}&limit=${limit}`
+        `/api/articles?platform_id=${platformId}&category=${category}&page=${page}&limit=${limit}&status=publish`
       );
 
       // Simpan ke state jika diperlukan

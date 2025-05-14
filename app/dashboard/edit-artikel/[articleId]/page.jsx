@@ -390,10 +390,10 @@ const EditArtikelPage = () => {
           <label className="block mb-2 font-medium">Date:</label>
           <input
             type="datetime-local"
-            value={selectedDate || formatDateForInput(articleData.scheduled_at)}
+            value={selectedDate || formatDateForInput(articleData.date)}
             onChange={handleScheduledChange}
             min={now}
-            className="w-full p-2 border rounded-md"
+            className="p-2 border rounded-md"
           />
         </div>
       </div>
