@@ -15,8 +15,12 @@ export default function SelectPortal() {
     if (typeof window === "undefined") return;
 
     const user = JSON.parse(localStorage.getItem("user") || "null");
-    const storedPlatforms = JSON.parse(localStorage.getItem("platforms") || "[]");
-    const storedSelectedPortal = JSON.parse(localStorage.getItem("selectedPortal") || "null");
+    const storedPlatforms = JSON.parse(
+      localStorage.getItem("platforms") || "[]"
+    );
+    const storedSelectedPortal = JSON.parse(
+      localStorage.getItem("selectedPortal") || "null"
+    );
 
     if (!user || !storedPlatforms.length) {
       router.push("/login");
@@ -31,12 +35,16 @@ export default function SelectPortal() {
   }, [router]);
 
   const handleSelectPortal = (portal) => {
-    const matchedPortal = allowedPortals.find(p => p.platform_id === portal.id);
+    const matchedPortal = allowedPortals.find(
+      (p) => p.platform_id === portal.id
+    );
     if (matchedPortal) {
       setSelectedPortal(matchedPortal);
       localStorage.setItem("selectedPortal", JSON.stringify(matchedPortal));
     } else {
-      console.warn("Portal tidak ditemukan dalam daftar platform yang diizinkan.");
+      console.warn(
+        "Portal tidak ditemukan dalam daftar platform yang diizinkan."
+      );
     }
   };
 
@@ -88,7 +96,7 @@ export default function SelectPortal() {
             <select
               onChange={(e) => {
                 const selectedId = parseInt(e.target.value);
-                const selected = portals.find(p => p.id === selectedId);
+                const selected = portals.find((p) => p.id === selectedId);
                 handleSelectPortal(selected);
               }}
               value={selectedPortal?.platform_id || ""}
@@ -97,19 +105,15 @@ export default function SelectPortal() {
               <option value="" disabled>
                 -- Pilih Provinsi --
               </option>
-              {portals.map((portal) => {
-                const isAllowed = allowedPortals.some(p => p.platform_id === portal.id);
-                return (
-                  <option
-                    key={portal.id}
-                    value={portal.id}
-                    disabled={!isAllowed}
-                    className={!isAllowed ? "text-gray-400" : ""}
-                  >
-                    {portal.name} {!isAllowed ? "❌" : ""}
+              {portals
+                .filter((portal) =>
+                  allowedPortals.some((p) => p.platform_id === portal.id)
+                )
+                .map((portal) => (
+                  <option key={portal.id} value={portal.id}>
+                    {portal.name}
                   </option>
-                );
-              })}
+                ))}
             </select>
           </div>
         )}
