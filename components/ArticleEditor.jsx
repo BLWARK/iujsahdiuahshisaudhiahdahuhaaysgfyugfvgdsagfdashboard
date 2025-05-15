@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { useBackend } from "@/context/BackContext"; // ✅ Import BackContext
+import Swal from "sweetalert2";
 
 const Editor = dynamic(
   () => import("@tinymce/tinymce-react").then((mod) => mod.Editor),
@@ -46,6 +47,10 @@ const ArticleEditor = () => {
           init={{
             height: 600,
             menubar: true,
+            selector: "#editor",
+            menubar: false,
+            contextmenu: false,
+            
             plugins: [
               "advlist",
               "autolink",
@@ -66,13 +71,38 @@ const ArticleEditor = () => {
               
             ],
             toolbar:
-              "undo redo |  blocks | alignleft " +
+              "undo redo custompaste |  blocks | alignleft " +
               "| bold italic underline blockquote  |  " +
               "bullist numlist outdent indent | link image media",
+               setup: (editor) => {
+  editor.ui.registry.addButton("customPaste", {
+    text: "Paste",
+    tooltip: "Paste teks manual",
+    onAction: async () => {
+      const { value: pasted } = await Swal.fire({
+        title: "Tempel Konten",
+        input: "textarea",
+        inputLabel: "Paste teks di bawah ini",
+        inputPlaceholder: "Paste teks di sini...",
+        showCancelButton: true,
+        confirmButtonText: "Sisipkan",
+        cancelButtonText: "Batal",
+        inputAttributes: {
+          "aria-label": "Paste konten di sini",
+        },
+      });
+
+      if (pasted) {
+        editor.insertContent(pasted);
+      }
+    },
+  });
+},
 
             block_formats:
               "Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4",
             fontsize_formats: "8pt 10pt 12pt 14pt 18pt 24pt 36pt",
+            
 
             link_list: async function (success) {
               try {
@@ -91,10 +121,6 @@ const ArticleEditor = () => {
               }
             },
 
-            
-
-            
-
             content_style:
               "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             paste_data_images: true, // ✅ Izinkan paste & drag and drop gambar
@@ -111,8 +137,6 @@ const ArticleEditor = () => {
             cleanup: false,
 
             protect: [/\<\/?script\>/g, /\<\/?blockquote\>/g],
-
-            
 
             file_picker_callback: function (callback, value, meta) {
               if (meta.filetype === "image") {
