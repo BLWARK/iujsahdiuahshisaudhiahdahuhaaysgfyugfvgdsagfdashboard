@@ -22,6 +22,7 @@ const TambahArtikel = () => {
   const [isSuccessPopupOpen, setSuccessPopupOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [isDescriptionEdited, setIsDescriptionEdited] = useState(false);
 
   // ✅ Pastikan `platform_id` terupdate dari `selectedPortal`
   useEffect(() => {
@@ -71,9 +72,10 @@ const TambahArtikel = () => {
     return title
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
+      .replace(/[^a-z\s-]/g, "") // ⛔ Hapus semua angka & karakter aneh
+      .replace(/\s+/g, "-") // Ganti spasi dengan tanda hubung
+      .replace(/-+/g, "-") // Gabungkan tanda minus berturut-turut
+      .replace(/^-+|-+$/g, ""); // Hapus tanda minus di awal dan akhir
   };
 
   const handleTitleChange = (e) => {
@@ -86,6 +88,17 @@ const TambahArtikel = () => {
     setIsSlugEdited(true);
     updateArticleData("slug", e.target.value);
   };
+
+  useEffect(() => {
+    if (!isDescriptionEdited && articleData.content) {
+      const plainText = articleData.content
+        .replace(/<[^>]*>?/gm, "") // hapus tag HTML
+        .trim();
+
+      const snippet = plainText.slice(0, 160); // ambil max 160 karakter
+      updateArticleData("description", snippet);
+    }
+  }, [articleData.content]);
 
   const formatDateForInput = (isoString) => {
     if (!isoString) return "";
@@ -104,18 +117,19 @@ const TambahArtikel = () => {
   const [now, setNow] = useState("");
 
   useEffect(() => {
-  const now = DateTime.now();
-  const defaultSchedule = now.plus({ hours: 0 }).toISO(); // jadwal default +1 jam
+    const now = DateTime.now();
+    const defaultSchedule = now.plus({ hours: 0 }).toISO(); // jadwal default +1 jam
 
-  setNow(now.toFormat("yyyy-MM-dd'T'HH:mm"));
+    setNow(now.toFormat("yyyy-MM-dd'T'HH:mm"));
 
-  // hanya set jika belum ada jadwal dari articleData
-  if (!articleData.scheduled_at) {
-    updateArticleData("scheduled_at", defaultSchedule);
-    setSelectedDate(DateTime.fromISO(defaultSchedule).toFormat("yyyy-MM-dd'T'HH:mm"));
-  }
-}, []);
-
+    // hanya set jika belum ada jadwal dari articleData
+    if (!articleData.scheduled_at) {
+      updateArticleData("scheduled_at", defaultSchedule);
+      setSelectedDate(
+        DateTime.fromISO(defaultSchedule).toFormat("yyyy-MM-dd'T'HH:mm")
+      );
+    }
+  }, []);
 
   // ✅ Pastikan platform_id ada sebelum submit
   const handleSubmitArticle = async () => {
@@ -374,7 +388,10 @@ const TambahArtikel = () => {
           <textarea
             rows={4}
             value={articleData.description || ""}
-            onChange={(e) => updateArticleData("description", e.target.value)}
+            onChange={(e) => {
+              setIsDescriptionEdited(true);
+              updateArticleData("description", e.target.value);
+            }}
             className="w-full p-2 border rounded-md"
             placeholder="Masukkan deskripsi singkat untuk meta SEO dan preview..."
           ></textarea>
@@ -425,7 +442,9 @@ const TambahArtikel = () => {
         </div>
 
         <div>
-          <label className="block mb-2 font-medium">🗓️ Tanggal Publikasi:</label>
+          <label className="block mb-2 font-medium">
+            🗓️ Tanggal Publikasi:
+          </label>
           <input
             type="datetime-local"
             value={selectedDate || formatDateForInput(articleData.scheduled_at)}

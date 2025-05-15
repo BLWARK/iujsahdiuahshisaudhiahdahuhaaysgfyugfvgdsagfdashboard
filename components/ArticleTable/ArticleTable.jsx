@@ -206,19 +206,19 @@ const ArticleTable = () => {
                 >
                   <AiOutlineEye size={20} />
                 </button>
-                <button
+                {/* <button
                   className="text-blue-500 hover:text-blue-700"
                   onClick={() => handleEditArticle(article.article_id, router)}
                 >
                   <AiOutlineEdit size={20} />
-                </button>
-                <button
+                </button> */}
+                {/* <button
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleDelete(article.article_id)}
                   title="Hapus Artikel"
                 >
                   <AiOutlineDelete size={20} />
-                </button>
+                </button> */}
               </td>
             </tr>
           ))}

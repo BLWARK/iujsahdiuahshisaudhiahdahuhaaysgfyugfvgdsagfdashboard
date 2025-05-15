@@ -24,6 +24,7 @@ const EditArtikelPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [isSuccessPopupOpen, setSuccessPopupOpen] = useState(false);
+  const [isDescriptionEdited, setIsDescriptionEdited] = useState(false);
 
   const { articleId } = useParams();
   const isEditMode = Boolean(articleId);
@@ -57,6 +58,16 @@ const EditArtikelPage = () => {
     fetchCategories();
   }, [selectedPortal]);
 
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z\s-]/g, "") // ⛔ Hapus semua angka & karakter aneh
+      .replace(/\s+/g, "-") // Ganti spasi dengan tanda hubung
+      .replace(/-+/g, "-") // Gabungkan tanda minus berturut-turut
+      .replace(/^-+|-+$/g, ""); // Hapus tanda minus di awal dan akhir
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -72,11 +83,22 @@ const EditArtikelPage = () => {
     updateArticleData("imageFile", null);
   };
 
-  const handleTitleChange = (e) => {
-    const title = e.target.value;
-    updateArticleData("title", title);
-    updateArticleData("slug", title.toLowerCase().replace(/\s+/g, "-"));
+ const handleTitleChange = (e) => {
+    const newTitle = e.target.value;
+    updateArticleData("title", newTitle);
+    updateArticleData("slug", generateSlug(newTitle));
   };
+
+  useEffect(() => {
+      if (!isDescriptionEdited && articleData.content) {
+        const plainText = articleData.content
+          .replace(/<[^>]*>?/gm, "") // hapus tag HTML
+          .trim();
+  
+        const snippet = plainText.slice(0, 160); // ambil max 160 karakter
+        updateArticleData("description", snippet);
+      }
+    }, [articleData.content]);
 
   const formatDateForInput = (isoString) =>
     isoString ? DateTime.fromISO(isoString).toFormat("yyyy-MM-dd'T'HH:mm") : "";
@@ -335,10 +357,13 @@ const EditArtikelPage = () => {
           <label className="block mb-2 font-medium">
             Deskripsi (SEO Description):
           </label>
-          <textarea
+           <textarea
             rows={4}
             value={articleData.description || ""}
-            onChange={(e) => updateArticleData("description", e.target.value)}
+            onChange={(e) => {
+              setIsDescriptionEdited(true);
+              updateArticleData("description", e.target.value);
+            }}
             className="w-full p-2 border rounded-md"
             placeholder="Masukkan deskripsi singkat untuk meta SEO dan preview..."
           ></textarea>

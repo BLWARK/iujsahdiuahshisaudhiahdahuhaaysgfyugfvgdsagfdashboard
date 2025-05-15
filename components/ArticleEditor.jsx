@@ -67,7 +67,7 @@ const ArticleEditor = () => {
             ],
             toolbar:
               "undo redo |  blocks | alignleft " +
-              "| bold italic underline |  " +
+              "| bold italic underline blockquote  |  " +
               "bullist numlist outdent indent | link image media",
 
             block_formats:
@@ -93,6 +93,8 @@ const ArticleEditor = () => {
 
             
 
+            
+
             content_style:
               "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             paste_data_images: true, // ✅ Izinkan paste & drag and drop gambar
@@ -109,6 +111,8 @@ const ArticleEditor = () => {
             cleanup: false,
 
             protect: [/\<\/?script\>/g, /\<\/?blockquote\>/g],
+
+            
 
             file_picker_callback: function (callback, value, meta) {
               if (meta.filetype === "image") {
