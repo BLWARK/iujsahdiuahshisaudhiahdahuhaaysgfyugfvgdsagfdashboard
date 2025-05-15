@@ -69,6 +69,7 @@ const ArticleEditor = () => {
               "help",
               "wordcount",
               
+              
             ],
             toolbar:
               "undo redo custompaste |  blocks | alignleft " +
