@@ -35,6 +35,8 @@ const ArticlePublishTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [meta, setMeta] = useState(null);
   const articlesPerPage = 10;
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const [sortConfig, setSortConfig] = useState({
     key: "date",
@@ -48,17 +50,22 @@ const ArticlePublishTable = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const storedPortal = JSON.parse(localStorage.getItem("selectedPortal"));
-    if (!selectedPortal && storedPortal) setSelectedPortal(storedPortal);
+  const storedPortal = JSON.parse(localStorage.getItem("selectedPortal"));
+  if (!selectedPortal && storedPortal) setSelectedPortal(storedPortal);
 
-    if (storedPortal?.platform_id) {
-      getArticlesPublish(storedPortal.platform_id, currentPage, articlesPerPage)
-        .then((response) => setMeta(response.meta))
-        .catch((err) =>
-          console.error("❌ Error fetching published articles:", err)
-        );
-    }
-  }, [selectedPortal, currentPage]);
+  if (storedPortal?.platform_id) {
+    setIsLoading(true); // ✅ mulai loading
+    getArticlesPublish(storedPortal.platform_id, currentPage, articlesPerPage)
+      .then((response) => {
+        setMeta(response.meta);
+      })
+      .catch((err) => {
+        console.error("❌ Error fetching published articles:", err);
+      })
+      .finally(() => setIsLoading(false)); // ✅ selesai loading
+  }
+}, [selectedPortal, currentPage]);
+
 
   const totalPages = meta ? meta.totalPages : 1;
 
@@ -146,7 +153,14 @@ const ArticlePublishTable = () => {
   };
 
   return (
+    
     <div>
+      {isLoading ? (
+      <div className="spinner-overlay">
+        <div className="spinner" />
+      </div>
+    ) : (
+      <>
       <table className="2xl:w-full xl:w-full lg:w-full w-[380px] text-left border-collapse overflow-x-scroll">
         <thead>
           <tr>
@@ -192,7 +206,7 @@ const ArticlePublishTable = () => {
               </td>
               <td className="border-b p-4">{article.title}</td>
               <td className="border-b p-4">
-                {article.author?.username || "Tidak Diketahui"}
+                {article.author?.fullname || "Tidak Diketahui"}
               </td>
               <td className="border-b p-4">
                 {(() => {
@@ -235,6 +249,7 @@ const ArticlePublishTable = () => {
           ))}
         </tbody>
       </table>
+      
 
       {/* Pagination */}
       <div className="mt-4 flex justify-between items-center">
@@ -272,6 +287,8 @@ const ArticlePublishTable = () => {
           onClose={() => setIsPopupOpen(false)}
         />
       )}
+      </>
+    )}
 
       {/* Optional Spinner */}
       {isFetchingArticle && (

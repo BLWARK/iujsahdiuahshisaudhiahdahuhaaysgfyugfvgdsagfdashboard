@@ -227,7 +227,7 @@ export const BackProvider = ({ children }) => {
         platform_id: platformIdInt,
         author_id: userId,
         image: imageUrl || articleData.image || "",
-        status: "Draft",
+        status: "draft",
         tags: Array.isArray(articleWithoutImage.tags)
           ? articleWithoutImage.tags.map((tag) =>
               tag.trim().toLowerCase().replace(/\s+/g, "-")
@@ -324,7 +324,7 @@ export const BackProvider = ({ children }) => {
         author_id: userId,
         platform_id: platformIdInt,
         image: imageUrl || "",
-        status: "Pending",
+        status: "pending",
         description: articleWithoutImage.description || "",
         tags: Array.isArray(articleWithoutImage.tags)
           ? articleWithoutImage.tags.map((tag) =>
@@ -492,7 +492,7 @@ export const BackProvider = ({ children }) => {
       if (!platformId) return;
       try {
         const response = await customGet(
-          `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=Pending`
+          `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=pending`
         );
 
         // ✅ Pakai optional chaining untuk menghindari undefined error
@@ -530,7 +530,7 @@ export const BackProvider = ({ children }) => {
 
     try {
       const response = await customGet(
-        `/api/articles?&platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=1&limit=50&status=Draft`
+        `/api/articles?&platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=1&limit=50&status=draft`
       );
       setArticles(response?.data || []);
       setDraftMeta(response.meta); // ✅ simpan meta
@@ -539,8 +539,8 @@ export const BackProvider = ({ children }) => {
     }
   };
 
-  const getAuthorArticles = useCallback(async () => {
-    if (!selectedPortal?.platform_id || !user?.user_id) return;
+  const getAuthorArticles = useCallback(
+    async () => { if (!selectedPortal?.platform_id || !user?.user_id) return;
 
     try {
       const response = await customGet(
@@ -550,8 +550,8 @@ export const BackProvider = ({ children }) => {
       setDraftMeta(response.meta);
     } catch (error) {
       console.error("❌ Error fetching author articles:", error);
-    }
-  }, [selectedPortal?.platform_id, user?.user_id]);
+    }},
+    [selectedPortal?.platform_id, user?.user_id]);
 
   // ✅ Fungsi untuk mengambil kategori berdasarkan platform_id
   const getCategoriesByPlatformId = async (platformId) => {
@@ -650,7 +650,7 @@ export const BackProvider = ({ children }) => {
     const payload = {
       ...articleWithoutImage,
       image: imageUrl || articleData.image || "",
-      status: "Pending", // ✅ Tambahkan ini
+      status: "pending", // ✅ Tambahkan ini
       tags: Array.isArray(articleWithoutImage.tags)
         ? articleWithoutImage.tags.map((tag) =>
             tag.trim().toLowerCase().replace(/\s+/g, "-")
@@ -683,6 +683,31 @@ export const BackProvider = ({ children }) => {
       console.error("❌ Gagal menghapus artikel:", error);
       throw error;
     }
+  };
+
+  const markArticleAsDeleted = async (articleId) => {
+  if (!articleId) throw new Error("ID artikel tidak valid");
+
+  try {
+    const response = await customPut(`/api/articles/${articleId}`, {
+      status: "deleted",
+    });
+    console.log("📝 Artikel ditandai sebagai deleted:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Gagal mengubah status artikel:", error);
+    throw error;
+  }
+  };
+
+  const getDeletedArticles = async (platformId) => {
+  try {
+    const response = await customGet(`/api/articles?platform_id=${platformId}&status=deleted`);
+    return response.data || [];
+  } catch (error) {
+    console.error("❌ Gagal mengambil artikel deleted:", error);
+    return [];
+  }
   };
 
   const uploadArticleImage = async (file) => {
@@ -1108,6 +1133,8 @@ export const BackProvider = ({ children }) => {
       searchArticles,
       searchResults,
       searchLoading,
+      markArticleAsDeleted,
+      getDeletedArticles,
     }),
     [
       user,

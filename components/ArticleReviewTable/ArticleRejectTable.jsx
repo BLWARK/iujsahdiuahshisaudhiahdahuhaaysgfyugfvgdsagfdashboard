@@ -34,6 +34,8 @@ const ArticleRejectTable = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const articlesPerPage = 10;
 
@@ -43,11 +45,17 @@ const ArticleRejectTable = () => {
   });
 
   useEffect(() => {
-    if (!selectedPortal?.platform_id) return;
-    getArticlesReject(selectedPortal.platform_id, currentPage, articlesPerPage)
-      .then((response) => setMeta(response.meta))
-      .catch((err) => console.error("Error fetching rejected articles:", err));
-  }, [selectedPortal, currentPage]);
+  if (!selectedPortal?.platform_id) return;
+
+  setIsLoading(true); // 🟢 Mulai loading
+  getArticlesReject(selectedPortal.platform_id, currentPage, articlesPerPage)
+    .then((response) => setMeta(response.meta))
+    .catch((err) =>
+      console.error("Error fetching rejected articles:", err)
+    )
+    .finally(() => setIsLoading(false)); // 🔴 Selesai loading
+}, [selectedPortal, currentPage]);
+
 
   const totalPages = meta ? meta.totalPages : 1;
 
@@ -138,6 +146,12 @@ const ArticleRejectTable = () => {
 
   return (
     <div>
+       {isLoading ? (
+      <div className="spinner-overlay">
+        <div className="spinner" />
+      </div>
+    ) : (
+      <>
       <table className="w-full text-left border-collapse">
         <thead>
           <tr>
@@ -263,6 +277,8 @@ const ArticleRejectTable = () => {
           onClose={() => setIsPreviewOpen(false)}
         />
       )}
+      </>
+    )}
 
       {/* Opsional Spinner */}
       {isLoadingPreview && (

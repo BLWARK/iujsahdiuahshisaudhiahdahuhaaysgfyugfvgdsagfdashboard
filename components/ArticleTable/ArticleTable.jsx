@@ -11,6 +11,7 @@ import { useBackend } from "@/context/BackContext";
 import { useRouter } from "next/navigation";
 import he from "he";
 import ArticlePreviewModal from "@/components/ArticlePreviewModal";
+import Swal from "sweetalert2";
 
 const ArticleTable = () => {
   const {
@@ -22,13 +23,13 @@ const ArticleTable = () => {
     getArticleById,
     handleEditArticle,
     deleteArticleById,
+    markArticleAsDeleted,
   } = useBackend();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isLoading, setIsLoading] = useState(true);
-
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -41,18 +42,15 @@ const ArticleTable = () => {
         .then(() => setIsLoading(false))
         .catch((err) => console.error("❌ Gagal memuat artikel:", err));
     }
-  }, [selectedPortal, user]); // ✅ FIX: jangan masukkan getAuthorArticles
-  
-  
+  }, [selectedPortal, user]);
 
   const filteredArticles = Array.isArray(articles)
-  ? articles.filter(
-      (article) =>
-        article.platform_id === selectedPortal?.platform_id &&
-        article.author_id === user?.user_id
-    )
-  : [];
-
+    ? articles.filter(
+        (article) =>
+          article.platform_id === selectedPortal?.platform_id &&
+          article.author_id === user?.user_id
+      )
+    : [];
 
   const sortedArticles = filteredArticles.sort((a, b) => {
     const valueA = a[sortColumn];
@@ -70,7 +68,6 @@ const ArticleTable = () => {
   });
 
   const totalPages = Math.ceil(sortedArticles.length / articlesPerPage);
-
   const currentArticles = sortedArticles.slice(
     (currentPage - 1) * articlesPerPage,
     currentPage * articlesPerPage
@@ -113,119 +110,112 @@ const ArticleTable = () => {
   };
 
   const handleDelete = async (articleId) => {
-    const confirm = window.confirm("🗑️ Yakin ingin menghapus artikel ini?");
-    if (!confirm) return;
+    const result = await Swal.fire({
+      title: "Yakin hapus artikel?",
+      text: "Artikel akan ditandai sebagai 'deleted'.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
-      await deleteArticleById(articleId);
-      await getArticles(selectedPortal.platform_id); // ✅ Refresh ulang data
+      await markArticleAsDeleted(articleId);
+      await getArticles(selectedPortal.platform_id);
+      Swal.fire("Sukses", "Artikel berhasil dihapus.", "success");
     } catch (err) {
-      console.error("❌ Gagal hapus artikel:", err);
+      console.error("❌ Gagal ubah status artikel:", err);
+      Swal.fire("Error", "Gagal menghapus artikel.", "error");
     }
   };
 
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
+    <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
       <h2 className="text-2xl font-bold mb-6">
         Daftar Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
       </h2>
-      <table className="w-full text-left border-collapse overflow-x-scroll">
-        <thead>
-          <tr>
-            <th className="border-b p-4">#</th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("title")}
-            >
-              <div className="flex items-center gap-2">
-                Judul {getSortIcon("title")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("category")}
-            >
-              <div className="flex items-center gap-2">
-                Kategori {getSortIcon("category")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("date")}
-            >
-              <div className="flex items-center gap-2">
-                Tanggal {getSortIcon("date")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("status")}
-            >
-              <div className="flex items-center gap-2">
-                Status {getSortIcon("status")}
-              </div>
-            </th>
-            <th className="border-b p-4">Approved/Rejected By</th>
-            <th className="border-b p-4">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentArticles.map((article, index) => (
-            <tr key={article._id} className="hover:bg-gray-50">
-              <td className="border-b p-4">
-                {index + 1 + (currentPage - 1) * articlesPerPage}
-              </td>
-              <td className="border-b p-4">{article.title}</td>
-              <td className="border-b p-4">
-                {Array.isArray(article.category)
-                  ? article.category.join(", ")
-                  : article.category || "No Category"}
-              </td>
-              <td className="border-b p-4">
-                {new Date(article.date).toLocaleDateString()}
-              </td>
-              <td
-                className={`border-b p-4 font-semibold ${
-                  article.status === "Publish"
-                    ? "text-green-600"
-                    : article.status === "Reject"
-                    ? "text-red-600"
-                    : "text-orange-500"
-                }`}
-              >
-                {article.status}
-              </td>
-              <td className="border-b p-4">{article.approved_by || "-"}</td>
-              <td className="border-b p-4 text-center flex gap-2">
-                <button
-                  className="text-green-500 hover:text-green-700"
-                  onClick={() => handleView(article.article_id)}
-                  title="Lihat"
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-full table-auto text-left border">
+          <thead>
+            <tr className="bg-gray-100">
+              {[
+                { label: "#", key: "index" },
+                { label: "Judul", key: "title" },
+                { label: "Kategori", key: "category" },
+                { label: "Tanggal", key: "date" },
+                { label: "Status", key: "status" },
+                { label: "Approved/Rejected By", key: "approved_by" },
+                { label: "Aksi", key: "action" },
+              ].map(({ label, key }) => (
+                <th
+                  key={key}
+                  className="border px-4 py-2 cursor-pointer whitespace-nowrap"
+                  onClick={() => key !== "index" && key !== "action" && handleSort(key)}
                 >
-                  <AiOutlineEye size={20} />
-                </button>
-                {/* <button
-                  className="text-blue-500 hover:text-blue-700"
-                  onClick={() => handleEditArticle(article.article_id, router)}
-                >
-                  <AiOutlineEdit size={20} />
-                </button> */}
-                {/* <button
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => handleDelete(article.article_id)}
-                  title="Hapus Artikel"
-                >
-                  <AiOutlineDelete size={20} />
-                </button> */}
-              </td>
+                  <div className="flex items-center gap-1">
+                    {label} {getSortIcon(key)}
+                  </div>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentArticles.map((article, index) => (
+              <tr key={article._id} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">
+                  {index + 1 + (currentPage - 1) * articlesPerPage}
+                </td>
+                <td className="border px-4 py-2">{article.title}</td>
+                <td className="border px-4 py-2">
+                  {Array.isArray(article.category)
+                    ? article.category.join(", ")
+                    : article.category || "No Category"}
+                </td>
+                <td className="border px-4 py-2">
+                  {new Date(article.date).toLocaleDateString()}
+                </td>
+                <td
+                  className={`border px-4 py-2 font-semibold whitespace-nowrap ${
+                    article.status === "Publish"
+                      ? "text-green-600"
+                      : article.status === "Reject"
+                      ? "text-red-600"
+                      : "text-orange-500"
+                  }`}
+                >
+                  {article.status}
+                </td>
+                <td className="border px-4 py-2 whitespace-nowrap">
+                  {article.approved_by || "-"}
+                </td>
+                <td className="border px-4 py-2 whitespace-nowrap">
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      className="text-green-500 hover:text-green-700"
+                      onClick={() => handleView(article.article_id)}
+                      title="Lihat"
+                    >
+                      <AiOutlineEye size={20} />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleDelete(article.article_id)}
+                      title="Hapus Artikel"
+                    >
+                      <AiOutlineDelete size={20} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Pagination */}
       <div className="mt-8 flex justify-between">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -246,7 +236,6 @@ const ArticleTable = () => {
         </button>
       </div>
 
-      {/* ✅ Modal untuk preview artikel */}
       {isPreviewOpen && previewData && (
         <ArticlePreviewModal
           article={previewData}

@@ -42,22 +42,29 @@ const ArticlePendingTable = () => {
   });
   const [notification, setNotification] = useState("");
   const [previewArticle, setPreviewArticle] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const router = useRouter();
   const articlesPerPage = 10;
 
   useEffect(() => {
-    if (!selectedPortal?.platform_id) return;
-    getArticlesPending(selectedPortal.platform_id, currentPage, articlesPerPage)
-      .then((res) => setMeta(res?.meta))
-      .catch((err) => console.error("❌ Gagal fetch artikel pending:", err));
-  }, [selectedPortal, currentPage]);
+  if (!selectedPortal?.platform_id) return;
+  setIsLoading(true); // ✅ mulai loading
+  getArticlesPending(selectedPortal.platform_id, currentPage, articlesPerPage)
+    .then((res) => setMeta(res?.meta))
+    .catch((err) => console.error("❌ Gagal fetch artikel pending:", err))
+    .finally(() => setIsLoading(false)); // ✅ selesai loading
+}, [selectedPortal, currentPage]);
 
-  const fetchPendingArticles = () => {
-    getArticlesPending(selectedPortal.platform_id, currentPage, articlesPerPage)
-      .then((res) => setMeta(res?.meta))
-      .catch((err) => console.error("❌ Gagal fetch artikel:", err));
-  };
+const fetchPendingArticles = () => {
+  setIsLoading(true); // ✅ loading ulang saat refresh
+  getArticlesPending(selectedPortal.platform_id, currentPage, articlesPerPage)
+    .then((res) => setMeta(res?.meta))
+    .catch((err) => console.error("❌ Gagal fetch artikel:", err))
+    .finally(() => setIsLoading(false)); // ✅ selesai loading
+};
+
 
   const totalPages = meta ? meta.totalPages : 1;
   const handlePageChange = (page) => {
@@ -134,6 +141,12 @@ const ArticlePendingTable = () => {
 
   return (
     <div>
+        {isLoading ? (
+      <div className="spinner-overlay">
+        <div className="spinner" />
+      </div>
+    ) : (
+      <>
       {notification && (
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
           {notification}
@@ -184,7 +197,7 @@ const ArticlePendingTable = () => {
               </td>
               <td className="border-b p-4">{article.title}</td>
               <td className="border-b p-4">
-                {article.author?.username || "-"}
+                {article.author?.fullname || "-"}
               </td>
               <td className="border-b p-4">
                 {(() => {
@@ -260,6 +273,8 @@ const ArticlePendingTable = () => {
           onClose={() => setPreviewArticle(null)}
         />
       )}
+      </>
+    )}
     </div>
   );
 };

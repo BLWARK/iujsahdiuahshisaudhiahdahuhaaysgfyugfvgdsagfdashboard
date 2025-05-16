@@ -48,7 +48,6 @@ const ArticleEditor = () => {
             height: 600,
             menubar: true,
             selector: "#editor",
-            menubar: false,
             contextmenu: false,
             
             plugins: [

@@ -1,18 +1,43 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AiOutlineReload,
   AiOutlineDelete,
   AiOutlineSortAscending,
   AiOutlineSortDescending,
 } from "react-icons/ai";
+import { useBackend } from "@/context/BackContext";
 
-const RecycleBinTable = ({ articles }) => {
+const RecycleBinTable = () => {
+  const {
+    getDeletedArticles,
+    selectedPortal,
+    markArticleAsDeleted,
+    submitEditedArticle,
+  } = useBackend();
+  const [articles, setArticles] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
   const articlesPerPage = 15;
 
-  // Fungsi untuk mengurutkan artikel
+  useEffect(() => {
+    if (!selectedPortal?.platform_id) return;
+
+    const fetchDeletedArticles = async () => {
+      try {
+        const data = await getDeletedArticles(selectedPortal.platform_id);
+        setArticles(data);
+      } catch (error) {
+        console.error("❌ Gagal mengambil artikel terhapus:", error);
+      }
+    };
+
+    fetchDeletedArticles();
+  }, [selectedPortal?.platform_id, getDeletedArticles]);
+
   const sortedArticles = [...articles].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "asc" ? -1 : 1;
@@ -23,7 +48,6 @@ const RecycleBinTable = ({ articles }) => {
     return 0;
   });
 
-  // Paginate Articles
   const totalPages = Math.ceil(sortedArticles.length / articlesPerPage);
   const currentArticles = sortedArticles.slice(
     (currentPage - 1) * articlesPerPage,
@@ -52,83 +76,95 @@ const RecycleBinTable = ({ articles }) => {
     return <AiOutlineSortAscending size={16} className="text-gray-400" />;
   };
 
-  return (
-    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
-      <h2 className="text-2xl font-bold mb-6">🗑️ Recycle Bin</h2>
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr>
-            <th className="border-b p-4">#</th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("title")}
-            >
-              <div className="flex items-center gap-2">
-                Judul {getSortIcon("title")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("category")}
-            >
-              <div className="flex items-center gap-2">
-                Kategori {getSortIcon("category")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("author")}
-            >
-              <div className="flex items-center gap-2">
-                Penulis {getSortIcon("author")}
-              </div>
-            </th>
-            <th
-              className="border-b p-4 cursor-pointer"
-              onClick={() => handleSort("date")}
-            >
-              <div className="flex items-center gap-2">
-                Tanggal {getSortIcon("date")}
-              </div>
-            </th>
-            <th className="border-b p-4">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentArticles.map((article, index) => (
-            <tr key={article.id} className="hover:bg-gray-50">
-              <td className="border-b p-4">
-                {index + 1 + (currentPage - 1) * articlesPerPage}
-              </td>
-              <td className="border-b p-4">{article.title}</td>
-              <td className="border-b p-4">{article.category}</td>
-              <td className="border-b p-4">{article.author || "N/A"}</td>
-              <td className="border-b p-4">{article.date}</td>
-              <td className="border-b p-4 space-x-4 flex items-center">
-                <button
-                  className="text-green-500 hover:text-green-700 transition-all"
-                  title="Restore Artikel"
-                >
-                  <AiOutlineReload size={20} />
-                </button>
-                <button
-                  className="text-red-500 hover:text-red-700 transition-all"
-                  title="Hapus Permanen"
-                >
-                  <AiOutlineDelete size={20} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  const handleRestore = async (article_Id, originalArticle) => {
+    try {
+      await submitEditedArticle(article_Id, {
+        ...originalArticle,
+        article_id: article_Id,
+        status: "pending",
+      });
+      const updated = await getDeletedArticles(selectedPortal.platform_id);
+      setArticles(updated);
+    } catch (err) {
+      console.error("❌ Gagal restore artikel:", err);
+    }
+  };
 
-      {/* Pagination */}
+  return (
+    <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
+      <h2 className="text-2xl font-bold mb-6">🗑️ Recycle Bin</h2>
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-full table-auto text-left border">
+          <thead>
+            <tr className="bg-gray-100">
+              {["#", "Judul", "Kategori", "Penulis", "Tanggal", "Aksi"].map(
+                (label) => (
+                  <th
+                    key={label}
+                    className="border px-4 py-2 whitespace-nowrap cursor-pointer"
+                    onClick={() =>
+                      !["#", "Aksi"].includes(label) &&
+                      handleSort(
+                        label === "Judul"
+                          ? "title"
+                          : label === "Kategori"
+                          ? "category"
+                          : label === "Penulis"
+                          ? "author"
+                          : label.toLowerCase()
+                      )
+                    }
+                  >
+                    <div className="flex items-center gap-1">
+                      {label} {getSortIcon(label.toLowerCase())}
+                    </div>
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {currentArticles.map((article, index) => (
+              <tr key={article._id} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">
+                  {index + 1 + (currentPage - 1) * articlesPerPage}
+                </td>
+                <td className="border px-4 py-2">{article.title}</td>
+                <td className="border px-4 py-2">{article.category}</td>
+                <td className="border px-4 py-2">
+                  {article.author?.username || article.author?.fullname || "N/A"}
+                </td>
+                <td className="border px-4 py-2">{article.date}</td>
+                <td className="border px-4 py-2">
+                  <div className="flex gap-2">
+                    <button
+                      className="text-green-500 hover:text-green-700"
+                      title="Restore Artikel"
+                      onClick={() =>
+                        handleRestore(article.article_id, article)
+                      }
+                    >
+                      <AiOutlineReload size={20} />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      title="Hapus Permanen"
+                    >
+                      <AiOutlineDelete size={20} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="flex justify-between items-center mt-8 gap-4">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-all"
+          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300"
         >
           Previous
         </button>
@@ -138,7 +174,7 @@ const RecycleBinTable = ({ articles }) => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-all"
+          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300"
         >
           Next
         </button>

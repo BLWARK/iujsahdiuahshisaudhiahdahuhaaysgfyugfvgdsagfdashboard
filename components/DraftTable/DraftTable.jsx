@@ -10,7 +10,7 @@ import {
 import { useBackend } from "@/context/BackContext";
 import { useRouter } from "next/navigation";
 import he from "he";
-import ArticlePreviewModal from "@/components/ArticlePreviewModal"; // ✅ Komponen popup
+import ArticlePreviewModal from "@/components/ArticlePreviewModal";
 
 const DraftTable = () => {
   const {
@@ -107,69 +107,82 @@ const DraftTable = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md 2xl:w-full xl:w-full lg:w-full w-[350px] overflow-x-scroll">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr>
-            <th className="border-b p-4">#</th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("title")}>
-              <div className="flex items-center gap-2">Judul {getSortIcon("title")}</div>
-            </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("category")}>
-              <div className="flex items-center gap-2">Kategori {getSortIcon("category")}</div>
-            </th>
-            <th className="border-b p-4 cursor-pointer" onClick={() => handleSort("date")}>
-              <div className="flex items-center gap-2">Tanggal {getSortIcon("date")}</div>
-            </th>
-            <th className="border-b p-4">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentArticles.map((article, index) => (
-            <tr key={article.article_id || index} className="hover:bg-gray-50">
-              <td className="border-b p-4">
-                {index + 1 + (currentPage - 1) * articlesPerPage}
-              </td>
-              <td className="border-b p-4">{article.title || "-"}</td>
-              <td className="border-b p-4">
-                {Array.isArray(article.category)
-                  ? article.category.join(", ")
-                  : article.category || "-"}
-              </td>
-              <td className="border-b p-4">
-                {article.date
-                  ? new Date(article.date).toLocaleDateString()
-                  : "-"}
-              </td>
-              <td className="border-b p-4 space-x-4 flex items-center">
-                <button
-                  onClick={() => handleView(article.article_id)}
-                  className="text-green-500 hover:text-green-700"
-                  title="Lihat Draft"
+    <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
+      <h2 className="text-2xl font-bold mb-6">Draft Artikel Saya</h2>
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-full table-auto text-left border">
+          <thead>
+            <tr className="bg-gray-100">
+              {["#", "Judul", "Kategori", "Tanggal", "Aksi"].map((label) => (
+                <th
+                  key={label}
+                  className="border px-4 py-2 whitespace-nowrap cursor-pointer"
+                  onClick={() =>
+                    !["#", "Aksi"].includes(label) &&
+                    handleSort(
+                      label === "Judul"
+                        ? "title"
+                        : label === "Kategori"
+                        ? "category"
+                        : label.toLowerCase()
+                    )
+                  }
                 >
-                  <AiOutlineEye size={20} />
-                </button>
-                <button
-                  onClick={() => handleEdit(article.article_id)}
-                  className="text-blue-500 hover:text-blue-700"
-                  title="Edit Draft"
-                >
-                  <AiOutlineEdit size={20} />
-                </button>
-                <button
-                  onClick={() => handleDelete(article.article_id)}
-                  className="text-red-500 hover:text-red-700"
-                  title="Hapus Draft"
-                >
-                  <AiOutlineDelete size={20} />
-                </button>
-              </td>
+                  <div className="flex items-center gap-1">
+                    {label} {getSortIcon(label.toLowerCase())}
+                  </div>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentArticles.map((article, index) => (
+              <tr key={article.article_id || index} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">
+                  {index + 1 + (currentPage - 1) * articlesPerPage}
+                </td>
+                <td className="border px-4 py-2">{article.title || "-"}</td>
+                <td className="border px-4 py-2">
+                  {Array.isArray(article.category)
+                    ? article.category.join(", ")
+                    : article.category || "-"}
+                </td>
+                <td className="border px-4 py-2">
+                  {article.date
+                    ? new Date(article.date).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td className="border px-4 py-2">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleView(article.article_id)}
+                      className="text-green-500 hover:text-green-700"
+                      title="Lihat Draft"
+                    >
+                      <AiOutlineEye size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(article.article_id)}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Edit Draft"
+                    >
+                      <AiOutlineEdit size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(article.article_id)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Hapus Draft"
+                    >
+                      <AiOutlineDelete size={20} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Pagination */}
       <div className="flex justify-between items-center mt-8 gap-4">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -190,7 +203,6 @@ const DraftTable = () => {
         </button>
       </div>
 
-      {/* Modal Preview */}
       {isPreviewOpen && previewData && (
         <ArticlePreviewModal
           article={previewData}
