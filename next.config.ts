@@ -1,16 +1,20 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http', // Atau 'https' jika menggunakan https
-        hostname: '156.67.217.169',
-        port: '9001', // Jika ada port, tambahkan disini. Misalnya '9001'.
-        pathname: '/**', // Menunjukkan seluruh path gambar
+        protocol: "http", // karena `user.avatar` pakai http
+        hostname: "156.67.217.169",
+        port: "9001", // jika diperlukan
+        pathname: "/**", // untuk semua path
+      },
+      {
+        protocol: "https", // juga tambahkan jika image bisa dari https (optional)
+        hostname: "storage.xyzone.media",
+        pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
