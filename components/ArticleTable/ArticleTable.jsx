@@ -24,6 +24,7 @@ const ArticleTable = () => {
     handleEditArticle,
     deleteArticleById,
     markArticleAsDeleted,
+    authorArticlesMeta,
   } = useBackend();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,17 +33,24 @@ const ArticleTable = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+
 
   const router = useRouter();
   const articlesPerPage = 15;
 
   useEffect(() => {
-    if (selectedPortal?.platform_id && user?.user_id) {
-      getAuthorArticles()
-        .then(() => setIsLoading(false))
-        .catch((err) => console.error("❌ Gagal memuat artikel:", err));
-    }
-  }, [selectedPortal, user]);
+  if (selectedPortal?.platform_id && user?.user_id) {
+    setIsLoading(true);
+    getAuthorArticles(currentPage, sortColumn, sortOrder)
+      .then(() => setIsLoading(false))
+      .catch((err) => {
+        console.error("❌ Gagal memuat artikel:", err);
+        setIsLoading(false);
+      });
+  }
+}, [selectedPortal, user, currentPage, sortColumn, sortOrder]);
+
 
   const filteredArticles = Array.isArray(articles)
     ? articles.filter(
@@ -67,11 +75,10 @@ const ArticleTable = () => {
     return 0;
   });
 
-  const totalPages = Math.ceil(sortedArticles.length / articlesPerPage);
-  const currentArticles = sortedArticles.slice(
-    (currentPage - 1) * articlesPerPage,
-    currentPage * articlesPerPage
-  );
+  const totalPages = authorArticlesMeta?.totalPages || 1;
+
+const currentArticles = articles;
+
 
   const handlePageChange = (page) => setCurrentPage(page);
 

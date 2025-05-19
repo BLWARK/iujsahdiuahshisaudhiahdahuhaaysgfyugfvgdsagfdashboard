@@ -28,6 +28,7 @@ export const BackProvider = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [draftMeta, setDraftMeta] = useState({ totalItems: 0 });
+  const [authorArticlesMeta, setAuthorArticlesMeta] = useState(null);
 
   const [articleData, setArticleData] = useState({
     platform_id: null,
@@ -540,18 +541,24 @@ export const BackProvider = ({ children }) => {
   };
 
   const getAuthorArticles = useCallback(
-    async () => { if (!selectedPortal?.platform_id || !user?.user_id) return;
+  async (page = 1, sortBy = "date", sortOrder = "desc") => {
+    if (!selectedPortal?.platform_id || !user?.user_id) return;
 
     try {
       const response = await customGet(
-        `/api/articles?platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=1&limit=50&status=all`
+        `/api/articles?platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=${page}&limit=15&status=all&sortBy=${sortBy}&sortOrder=${sortOrder}`
       );
+
       setArticles(response?.data || []);
-      setDraftMeta(response.meta);
+      setAuthorArticlesMeta(response?.meta || {}); // ✅ tambahkan ini
     } catch (error) {
       console.error("❌ Error fetching author articles:", error);
-    }},
-    [selectedPortal?.platform_id, user?.user_id]);
+    }
+  },
+  [selectedPortal?.platform_id, user?.user_id]
+);
+
+
 
   // ✅ Fungsi untuk mengambil kategori berdasarkan platform_id
   const getCategoriesByPlatformId = async (platformId) => {
@@ -1135,6 +1142,7 @@ export const BackProvider = ({ children }) => {
       searchLoading,
       markArticleAsDeleted,
       getDeletedArticles,
+      authorArticlesMeta,
     }),
     [
       user,
