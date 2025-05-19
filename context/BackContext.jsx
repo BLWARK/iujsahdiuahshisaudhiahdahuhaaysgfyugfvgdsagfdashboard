@@ -739,29 +739,38 @@ export const BackProvider = ({ children }) => {
   };
 
   // Fungsi untuk upload gambar
-  const uploadImage = async (imageFile) => {
-    try {
-      const formData = new FormData();
-      formData.append("image", imageFile);
+const uploadImage = async (imageFile) => {
+  try {
+    const formData = new FormData();
+    formData.append("image", imageFile);
 
-      const response = await customPost("/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    const response = await customPost("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      const imageUrl = response?.data?.url || response?.url || null;
+    let imageUrl = response?.data?.url || response?.url || null;
 
-      if (!imageUrl) {
-        throw new Error("Gagal mendapatkan URL gambar.");
-      }
-
-      return imageUrl;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw new Error("Gagal upload gambar.");
+    if (imageUrl?.includes("156.67.217.169")) {
+      imageUrl = imageUrl
+        .replace("http://156.67.217.169:9001", "https://storage.xyzone.media")
+        .replace("http://", "https://"); // pastikan https
     }
-  };
+
+    if (!imageUrl) {
+      throw new Error("Gagal mendapatkan URL gambar.");
+    }
+
+    return imageUrl;
+  } catch (error) {
+    console.error("❌ Gagal upload gambar:", error);
+    throw new Error("Upload gagal");
+  }
+};
+
+
+
 
   // Fungsi untuk approve artikel
   const approveArticle = async (articleId) => {
