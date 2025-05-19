@@ -4,17 +4,20 @@ import React, { useState, useEffect } from "react";
 import ArticleReviewTable from "@/components/ArticleReviewTable/ArticleReviewTable";
 import { articles } from "@/data/articles"; // Import data artikel
 import ArticleListSkeleton from "@/components/ArticleListSkeleton";
-
+import Swal from "sweetalert2";
+import { useBackend } from "@/context/BackContext";
 
 const ArticleReviewPage = () => {
   const [reviewArticles, setReviewArticles] = useState(articles);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { getArticles, markArticleAsDeleted, selectedPortal } = useBackend();
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoading(false);
     }, 800); // ⏳ Simulasi delay loading 800ms
-  
+
     return () => clearTimeout(timeout);
   }, []);
 
@@ -37,36 +40,39 @@ const ArticleReviewPage = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirm = window.confirm("Yakin ingin menghapus artikel ini?");
-    if (!confirm) return;
-  
+    const result = await Swal.fire({
+      title: "Yakin hapus artikel?",
+      text: "Artikel akan ditandai sebagai 'deleted'.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      // Kalau kamu udah setup deleteArticleById di BackContext:
-      // await deleteArticleById(id);
-  
-      // Kalau sementara pakai frontend dummy data:
-      setReviewArticles((prev) => prev.filter((article) => article.id !== id));
-  
-      alert(`🗑️ Artikel dengan ID ${id} telah dihapus.`);
+      await markArticleAsDeleted(id);
+      await getArticles(selectedPortal.platform_id);
+      Swal.fire("Sukses", "Artikel berhasil dihapus.", "success");
     } catch (err) {
-      console.error("❌ Gagal menghapus artikel:", err);
-      alert("❌ Gagal menghapus artikel: " + err.message);
+      console.error("❌ Gagal ubah status artikel:", err);
+      Swal.fire("Error", "Gagal menghapus artikel.", "error");
     }
   };
-  
 
   return (
     <div className="p-6 2xl:w-full xl:w-full lg:w-full md:w-full w-[390px]">
-     {isLoading ? (
-  <ArticleListSkeleton count={6} />
-) : (
-  <ArticleReviewTable
-    articles={reviewArticles}
-    onApprove={handleApprove}
-    onReject={handleReject}
-    onDelete={handleDelete}
-  />
-)}
+      {isLoading ? (
+        <ArticleListSkeleton count={6} />
+      ) : (
+        <ArticleReviewTable
+          articles={reviewArticles}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 };

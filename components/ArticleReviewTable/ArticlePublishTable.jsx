@@ -30,6 +30,7 @@ const ArticlePublishTable = () => {
     handleEditArticle,
     deleteArticleById,
     getArticleById,
+    markArticleAsDeleted,
   } = useBackend();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,7 +138,8 @@ const ArticlePublishTable = () => {
 
     if (result.isConfirmed) {
       try {
-        await deleteArticleById(articleId);
+        await markArticleAsDeleted(articleId); // ✅ pakai ini
+
         Swal.fire("Dihapus!", "Artikel berhasil dihapus.", "success");
         const res = await getArticlesPublish(
           selectedPortal.platform_id,
