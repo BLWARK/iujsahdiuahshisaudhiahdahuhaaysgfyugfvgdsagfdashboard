@@ -49,7 +49,7 @@ const ArticleEditor = () => {
             menubar: true,
             selector: "#editor",
             contextmenu: false,
-            
+
             plugins: [
               "advlist",
               "autolink",
@@ -67,42 +67,39 @@ const ArticleEditor = () => {
               "table",
               "help",
               "wordcount",
-              
-              
             ],
             toolbar:
               "undo redo custompaste |  blocks | alignleft " +
               "| bold italic underline blockquote  |  " +
               "bullist numlist outdent indent | link image media",
-               setup: (editor) => {
-  editor.ui.registry.addButton("customPaste", {
-    text: "Paste",
-    tooltip: "Paste teks manual",
-    onAction: async () => {
-      const { value: pasted } = await Swal.fire({
-        title: "Tempel Konten",
-        input: "textarea",
-        inputLabel: "Paste teks di bawah ini",
-        inputPlaceholder: "Paste teks di sini...",
-        showCancelButton: true,
-        confirmButtonText: "Sisipkan",
-        cancelButtonText: "Batal",
-        inputAttributes: {
-          "aria-label": "Paste konten di sini",
-        },
-      });
+            setup: (editor) => {
+              editor.ui.registry.addButton("customPaste", {
+                text: "Paste",
+                tooltip: "Paste teks manual",
+                onAction: async () => {
+                  const { value: pasted } = await Swal.fire({
+                    title: "Tempel Konten",
+                    input: "textarea",
+                    inputLabel: "Paste teks di bawah ini",
+                    inputPlaceholder: "Paste teks di sini...",
+                    showCancelButton: true,
+                    confirmButtonText: "Sisipkan",
+                    cancelButtonText: "Batal",
+                    inputAttributes: {
+                      "aria-label": "Paste konten di sini",
+                    },
+                  });
 
-      if (pasted) {
-        editor.insertContent(pasted);
-      }
-    },
-  });
-},
+                  if (pasted) {
+                    editor.insertContent(pasted);
+                  }
+                },
+              });
+            },
 
             block_formats:
               "Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4",
             fontsize_formats: "8pt 10pt 12pt 14pt 18pt 24pt 36pt",
-            
 
             link_list: async function (success) {
               try {
@@ -111,7 +108,7 @@ const ArticleEditor = () => {
                 const links =
                   articles?.data?.map((article) => ({
                     title: article.title,
-                    value: `https://yourdomain.com/article/${article.slug}`, // 🔥 ganti ke domain kamu
+                    value: `https://xyzone.media/article/${article.slug}`, // 🔥 ganti ke domain kamu
                   })) || [];
 
                 success(links);
@@ -152,12 +149,12 @@ const ArticleEditor = () => {
                     const url = await uploadArticleImage(file);
                     console.log("📦 URL hasil upload:", url);
 
-                    if (
-                      url &&
-                      typeof url === "string" &&
-                      url.startsWith("http")
-                    ) {
-                      callback(url, { alt: file.name }); // ✅ hanya panggil kalau URL valid
+                    if (url && typeof url === "string") {
+                      const finalUrl = url.replace(
+                        "http://156.67.217.169:9001",
+                        "https://storage.xyzone.media"
+                      );
+                      callback(finalUrl, { alt: file.name });
                     } else {
                       alert("❌ Upload gagal: URL tidak valid atau kosong.");
                     }
