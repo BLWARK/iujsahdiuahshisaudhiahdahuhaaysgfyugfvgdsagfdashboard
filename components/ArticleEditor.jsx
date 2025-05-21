@@ -49,7 +49,7 @@ const ArticleEditor = () => {
             menubar: true,
             selector: "#editor",
             contextmenu: false,
-
+           valid_children: "+body[script],+blockquote[a|script],-blockquote[blockquote]", // ❌ Tolak blockquote di dalam blockquote
             plugins: [
               "advlist",
               "autolink",
@@ -73,6 +73,7 @@ const ArticleEditor = () => {
               "| bold italic underline blockquote  |  " +
               "bullist numlist outdent indent | link image media",
             setup: (editor) => {
+              // Tombol customPaste
               editor.ui.registry.addButton("customPaste", {
                 text: "Paste",
                 tooltip: "Paste teks manual",
@@ -85,15 +86,34 @@ const ArticleEditor = () => {
                     showCancelButton: true,
                     confirmButtonText: "Sisipkan",
                     cancelButtonText: "Batal",
-                    inputAttributes: {
-                      "aria-label": "Paste konten di sini",
-                    },
                   });
 
                   if (pasted) {
                     editor.insertContent(pasted);
                   }
                 },
+              });
+
+              // 🔥 Cegah blockquote bersarang
+              editor.on("NodeChange", () => {
+                const currentNode = editor.selection.getNode();
+                const isNested = currentNode.closest("blockquote blockquote");
+                if (isNested) {
+                  alert("❌ Tidak boleh ada blockquote di dalam blockquote.");
+                  editor.dom.remove(currentNode.closest("blockquote")); // hapus yang dalam
+                }
+              });
+
+              // 🔥 Auto remove blockquote kosong
+              editor.on("SetContent Change", () => {
+                const content = editor.getContent();
+                const cleaned = content.replace(
+                  /<blockquote>\s*<\/blockquote>/g,
+                  ""
+                );
+                if (content !== cleaned) {
+                  editor.setContent(cleaned);
+                }
               });
             },
 
