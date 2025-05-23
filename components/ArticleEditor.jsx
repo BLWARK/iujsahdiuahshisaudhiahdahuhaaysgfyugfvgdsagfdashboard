@@ -49,7 +49,7 @@ const ArticleEditor = () => {
             menubar: true,
             selector: "#editor",
             contextmenu: false,
-           valid_children: "+body[script],+blockquote[a|script],-blockquote[blockquote]", // ❌ Tolak blockquote di dalam blockquote
+           valid_children: "+body[script],+blockquote[a|script],-blockquote[blockquote]",  // ❌ Tolak blockquote di dalam blockquote
             plugins: [
               "advlist",
               "autolink",

@@ -309,15 +309,16 @@ export const BackProvider = ({ children }) => {
     const { imageFile, ...articleWithoutImage } = articleData || {};
     let imageUrl = null;
 
-    if (imageFile) {
-      try {
-        imageUrl = await uploadImage(imageFile);
-      } catch (error) {
-        console.error("❌ Gagal mengupload gambar:", error);
-        alert("❌ Upload gambar gagal. Silakan coba lagi.");
-        return;
-      }
-    }
+  if (imageFile) {
+  try {
+    imageUrl = await uploadImage(imageFile);
+  } catch (error) {
+    console.error("❌ Gagal mengupload gambar:", error);
+   
+    throw new Error("Upload gambar gagal"); // ⬅️ INI WAJIB agar keluar dari fungsi
+  }
+}
+
 
     try {
       const payload = {
@@ -646,13 +647,15 @@ export const BackProvider = ({ children }) => {
     } = articleData || {};
 
     let imageUrl = null;
-    if (imageFile) {
-      try {
-        imageUrl = await uploadImage(imageFile);
-      } catch (error) {
-        console.error("❌ Gagal upload gambar:", error);
-      }
+     if (imageFile) {
+    try {
+      imageUrl = await uploadImage(imageFile);
+    } catch (error) {
+      console.error("❌ Gagal upload gambar:", error);
+      
+      throw new Error("Gagal upload gambar");
     }
+  }
 
     const payload = {
       ...articleWithoutImage,
