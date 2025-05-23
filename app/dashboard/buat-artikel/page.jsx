@@ -141,7 +141,7 @@ const TambahArtikel = () => {
       meta_title,
       tags,
       description, // ⬅️ tambahkan
-      // category,
+      category,
       platform_id,
     } = articleData;
 
@@ -154,7 +154,7 @@ const TambahArtikel = () => {
       !meta_title ||
       !tags ||
       !description || // ⬅️ validasi
-      // !category?.length ||
+      !category?.length ||
       !platform_id
     ) {
       Swal.fire({
