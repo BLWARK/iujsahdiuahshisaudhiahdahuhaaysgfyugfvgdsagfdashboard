@@ -1,0 +1,32 @@
+{
+    "name": "XYZONEMEDIA",
+    "short_name": "XYZONE",
+    "description": "XYZONEMEDIA adalah portal berita terpercaya yang menyajikan informasi terkini di dunia crypto, teknologi, dan keuangan.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ff6600",
+    "icons": [
+      {
+        "src": "/XYZONELOGOAPP.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/XYZONELOGOAPP.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      },
+      {
+        "src": "/XYZONELOGOAPP.png",
+        "sizes": "144x144",
+        "type": "image/png"
+      },
+      {
+        "src": "/XYZONELOGOAPP.png",
+        "sizes": "384x384",
+        "type": "image/png"
+      }
+    ]
+  }
+  
