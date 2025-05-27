@@ -167,7 +167,8 @@ const TambahArtikel = () => {
 
     try {
       await submitArticle();
-      setSuccessPopupOpen(true); // ✅ Show popup kalau berhasil
+      localStorage.removeItem("autosave-article"); // 🔥 Hapus setelah submit
+      setSuccessPopupOpen(true);
     } catch (err) {
       Swal.fire({
         icon: "error",
@@ -176,6 +177,42 @@ const TambahArtikel = () => {
       });
     }
   };
+
+ useEffect(() => {
+  const lastSaved = localStorage.getItem("autosave-article");
+  const current = JSON.stringify(articleData);
+
+  if (!lastSaved || JSON.stringify(JSON.parse(lastSaved)?.data) !== current) {
+    const timeout = setTimeout(() => {
+      localStorage.setItem(
+        "autosave-article",
+        JSON.stringify({ data: articleData, savedAt: Date.now() })
+      );
+      console.log("💾 Autosaved (only if changed)");
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }
+}, [articleData]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("autosave-article");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const maxAge = 3 * 24 * 60 * 60 * 1000; // 3 hari
+
+      if (Date.now() - parsed.savedAt <= maxAge) {
+        const { data } = parsed;
+        Object.entries(data).forEach(([key, value]) => {
+          updateArticleData(key, value);
+        });
+        console.log("♻️ Draft restored from localStorage");
+      } else {
+        // 🔥 Terlalu lama, hapus
+        localStorage.removeItem("autosave-article");
+        console.log("🗑️ Draft expired and removed");
+      }
+    }
+  }, []);
 
   const handleClosePopup = () => {
     setSuccessPopupOpen(false);

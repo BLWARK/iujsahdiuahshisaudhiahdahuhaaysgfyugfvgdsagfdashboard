@@ -9,6 +9,7 @@ import {
 } from "react-icons/ai";
 import { useBackend } from "@/context/BackContext";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import he from "he";
 import ArticlePreviewModal from "@/components/ArticlePreviewModal";
 
@@ -16,11 +17,12 @@ const DraftTable = () => {
   const {
     articles,
     getDraftArticles,
-    deleteArticleById,
+    getArticles,
     handleEditArticle,
     selectedPortal,
     user,
     getArticleById,
+    markArticleAsDeleted,
   } = useBackend();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,13 +88,24 @@ const DraftTable = () => {
   const handleEdit = (articleId) => handleEditArticle(articleId, router);
 
   const handleDelete = async (articleId) => {
-    const confirm = window.confirm("🗑️ Yakin ingin menghapus draft ini?");
-    if (!confirm) return;
+    const result = await Swal.fire({
+      title: "Yakin hapus artikel?",
+      text: "Artikel akan ditandai sebagai 'deleted'.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      await deleteArticleById(articleId);
-      await getDraftArticles();
+      await markArticleAsDeleted(articleId);
+      await getArticles(selectedPortal.platform_id);
+      Swal.fire("Sukses", "Artikel berhasil dihapus.", "success");
     } catch (err) {
-      console.error("❌ Gagal menghapus draft:", err);
+      console.error("❌ Gagal ubah status artikel:", err);
+      Swal.fire("Error", "Gagal menghapus artikel.", "error");
     }
   };
 
