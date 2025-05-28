@@ -24,7 +24,8 @@ const ArticleEditor = () => {
     process.env.NEXT_PUBLIC_TINYMCE_API_KEY ||
     // "7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c";
     // "srha4vit683zf5eg0vnzbepkglfxs11f72kt4ccye3bxw5j0";
-    "8ey29h76atxu6uce69zo6782ylewrsbnu8xo3iie94b6x6tm";
+    // "8ey29h76atxu6uce69zo6782ylewrsbnu8xo3iie94b6x6tm";
+    "7c6t8otlxhe6wcyj5qh1ouznm8fumzwypo53uzd2j6aku626"
 
   return (
     <div className="p-4 border rounded-md bg-white shadow-md">
@@ -53,6 +54,7 @@ const ArticleEditor = () => {
             plugins: [
               "advlist",
               "autolink",
+              "ai",
               "lists",
               "link",
               "image",
@@ -70,9 +72,23 @@ const ArticleEditor = () => {
               
             ],
             toolbar:
-              "undo redo custompaste |  blocks | alignleft " +
+              "undo redo custompaste aidialog aishortcuts |  blocks | alignleft " +
               "| bold italic underline blockquote  |  " +
-              "bullist numlist outdent indent | link image media",
+              "bullist numlist outdent indent | link image media |",
+
+               ai_request: (request, respondWith) => {
+              fetch("https://ai.tiny.cloud/request", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "tinymce-api-key": apiKey,
+                },
+                body: JSON.stringify(request),
+              })
+                .then((res) => res.json())
+                .then(respondWith)
+                .catch((err) => console.error("AI Request Error:", err));
+            },
             setup: (editor) => {
               // Tombol customPaste
               editor.ui.registry.addButton("customPaste", {
