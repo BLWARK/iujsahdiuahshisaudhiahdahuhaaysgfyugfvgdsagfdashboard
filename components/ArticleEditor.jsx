@@ -50,7 +50,8 @@ const ArticleEditor = () => {
             menubar: true,
             selector: "#editor",
             contextmenu: false,
-           valid_children: "+body[script],+blockquote[a|script],-blockquote[blockquote]",  // ❌ Tolak blockquote di dalam blockquote
+            valid_children:
+              "+body[script],+blockquote[a|script],-blockquote[blockquote]", // ❌ Tolak blockquote di dalam blockquote
             plugins: [
               "advlist",
               "autolink",
@@ -67,8 +68,7 @@ const ArticleEditor = () => {
               "media",
               "table",
               "help",
-              "wordcount"
-              
+              "wordcount",
             ],
             toolbar:
               "undo redo custompaste |  blocks | alignleft " +
@@ -125,18 +125,18 @@ const ArticleEditor = () => {
 
             link_list: async function (success) {
               try {
-                const articles = await getArticlesLink(1, "ALL"); // 🔥 misal ambil artikel halaman 1 semua kategori
+                const articles = await getArticlesLink(1, "ALL"); // Ambil semua artikel halaman 1
 
                 const links =
                   articles?.data?.map((article) => ({
                     title: article.title,
-                    value: `https://xyzone.media/article/${article.slug}`, // 🔥 ganti ke domain kamu
+                    value: `https://xyzone.media/article/${article.article_id}/${article.slug}`, // ✅ Tambahkan article_id ke URL
                   })) || [];
 
                 success(links);
               } catch (error) {
                 console.error("Gagal mengambil artikel:", error);
-                success([]); // tetap panggil success biar TinyMCE gak error
+                success([]); // Tetap panggil success untuk mencegah error TinyMCE
               }
             },
 
