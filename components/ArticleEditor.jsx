@@ -54,7 +54,6 @@ const ArticleEditor = () => {
             plugins: [
               "advlist",
               "autolink",
-              "ai",
               "lists",
               "link",
               "image",
@@ -72,23 +71,9 @@ const ArticleEditor = () => {
               
             ],
             toolbar:
-              "undo redo custompaste aidialog aishortcuts |  blocks | alignleft " +
+              "undo redo custompaste |  blocks | alignleft " +
               "| bold italic underline blockquote  |  " +
-              "bullist numlist outdent indent | link image media |",
-
-               ai_request: (request, respondWith) => {
-              fetch("https://ai.tiny.cloud/request", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "tinymce-api-key": apiKey,
-                },
-                body: JSON.stringify(request),
-              })
-                .then((res) => res.json())
-                .then(respondWith)
-                .catch((err) => console.error("AI Request Error:", err));
-            },
+              "bullist numlist outdent indent | link image media",
             setup: (editor) => {
               // Tombol customPaste
               editor.ui.registry.addButton("customPaste", {
