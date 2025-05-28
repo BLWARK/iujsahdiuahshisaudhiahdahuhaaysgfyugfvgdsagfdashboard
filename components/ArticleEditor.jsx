@@ -25,7 +25,7 @@ const ArticleEditor = () => {
     // "7jfd9zlib72t0hy2djlaju8pshs56n96a658r65fa6ji795c";
     // "srha4vit683zf5eg0vnzbepkglfxs11f72kt4ccye3bxw5j0";
     // "8ey29h76atxu6uce69zo6782ylewrsbnu8xo3iie94b6x6tm";
-    "7c6t8otlxhe6wcyj5qh1ouznm8fumzwypo53uzd2j6aku626"
+    "7c6t8otlxhe6wcyj5qh1ouznm8fumzwypo53uzd2j6aku626";
 
   return (
     <div className="p-4 border rounded-md bg-white shadow-md">
