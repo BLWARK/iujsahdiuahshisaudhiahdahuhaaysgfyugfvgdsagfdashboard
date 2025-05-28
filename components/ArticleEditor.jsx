@@ -130,7 +130,7 @@ const ArticleEditor = () => {
                 const links =
                   articles?.data?.map((article) => ({
                     title: article.title,
-                    value: `https://xyzone.media/article/${article.article_id}/${article.slug}`, // ✅ Tambahkan article_id ke URL
+                    value: `https://xyzone.media/artikel/${article.article_id}/${article.slug}`, // ✅ Tambahkan article_id ke URL
                   })) || [];
 
                 success(links);
