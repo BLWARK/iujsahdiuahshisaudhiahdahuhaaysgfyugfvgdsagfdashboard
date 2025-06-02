@@ -102,8 +102,11 @@ const HeadlinePage = () => {
 
   // ✅ Filter artikel berdasarkan selectedPortal.platform_id
   const filteredArticles = articles.filter(
-    (article) => article.platform_id === selectedPortal?.platform_id
-  );
+  (article) =>
+    article.platform_id === selectedPortal?.platform_id &&
+    article.status === "publish" // ✅ hanya status publish
+);
+
 
   // ✅ Sorting berdasarkan tanggal (descending: artikel terbaru di atas)
   const sortedFilteredArticles = [...filteredArticles].sort(
