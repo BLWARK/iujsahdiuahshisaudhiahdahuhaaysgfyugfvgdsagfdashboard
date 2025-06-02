@@ -289,71 +289,71 @@ export const BackProvider = ({ children }) => {
 
   // ✅ Fungsi untuk submit artikel dengan upload gambar dan update
   const submitArticle = async () => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-    const userId = user?.user_id || storedUser?.user_id || null;
-    const platformId = selectedPortal?.platform_id;
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const userId = user?.user_id || storedUser?.user_id || null;
+  const userRole = storedUser?.role?.toLowerCase() || "contributor";
+  const platformId = selectedPortal?.platform_id;
 
-    if (!platformId || !userId) {
-      alert(
-        "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
-      );
-      return;
-    }
+  if (!platformId || !userId) {
+    alert(
+      "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
+    );
+    return;
+  }
 
-    const platformIdInt = parseInt(platformId, 10);
-    if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
-      alert("❌ Platform ID tidak valid.");
-      return;
-    }
+  const platformIdInt = parseInt(platformId, 10);
+  if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
+    alert("❌ Platform ID tidak valid.");
+    return;
+  }
 
-    const { imageFile, ...articleWithoutImage } = articleData || {};
-    let imageUrl = null;
+  const { imageFile, ...articleWithoutImage } = articleData || {};
+  let imageUrl = null;
 
   if (imageFile) {
-  try {
-    imageUrl = await uploadImage(imageFile);
-  } catch (error) {
-    console.error("❌ Gagal mengupload gambar:", error);
-   
-    throw new Error("Upload gambar gagal"); // ⬅️ INI WAJIB agar keluar dari fungsi
-  }
-}
-
-
     try {
-      const payload = {
-        ...articleWithoutImage,
-        author_id: userId,
-        platform_id: platformIdInt,
-        image: imageUrl || "",
-        status: "pending",
-        description: articleWithoutImage.description || "",
-        tags: Array.isArray(articleWithoutImage.tags)
-          ? articleWithoutImage.tags.map((tag) =>
-              tag.trim().toLowerCase().replace(/\s+/g, "-")
-            )
-          : typeof articleWithoutImage.tags === "string"
-          ? articleWithoutImage.tags
-              .split(",")
-              .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
-          : [],
-      };
-
-      const response = await customPost("/api/articles", payload);
-      const articleId = response?.article_id || response?._id;
-
-      if (!articleId) {
-        throw new Error("Gagal mendapatkan article_id dari response.");
-      }
-
-      console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
-      return articleId;
+      imageUrl = await uploadImage(imageFile);
     } catch (error) {
-      console.error("❌ Error submitting article:", error);
-      alert("❌ Gagal mengirim artikel. Silakan periksa kembali data Anda.");
-      throw error;
+      console.error("❌ Gagal mengupload gambar:", error);
+      throw new Error("Upload gambar gagal"); // ⬅️ WAJIB agar keluar dari fungsi
     }
-  };
+  }
+
+  try {
+    const payload = {
+      ...articleWithoutImage,
+      author_id: userId,
+      platform_id: platformIdInt,
+      image: imageUrl || "",
+      status: (userRole === "editor" || userRole === "master") ? "publish" : "pending",
+      description: articleWithoutImage.description || "",
+      tags: Array.isArray(articleWithoutImage.tags)
+        ? articleWithoutImage.tags.map((tag) =>
+            tag.trim().toLowerCase().replace(/\s+/g, "-")
+          )
+        : typeof articleWithoutImage.tags === "string"
+        ? articleWithoutImage.tags
+            .split(",")
+            .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
+        : [],
+    };
+
+    const response = await customPost("/api/articles", payload);
+    const articleId = response?.article_id || response?._id;
+
+    if (!articleId) {
+      throw new Error("Gagal mendapatkan article_id dari response.");
+    }
+
+    console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
+    return articleId;
+  } catch (error) {
+    console.error("❌ Error submitting article:", error);
+    alert("❌ Gagal mengirim artikel. Silakan periksa kembali data Anda.");
+    throw error;
+  }
+};
+
 
   const saveHeadlines = async (headlines, headlineCategory = "HOME") => {
     if (!selectedPortal?.platform_id) {
@@ -632,55 +632,58 @@ export const BackProvider = ({ children }) => {
   };
 
   const submitEditedArticle = async (articleId, articleData) => {
-    if (!articleId) {
-      alert("❗ ID artikel tidak valid.");
-      return;
-    }
+  if (!articleId) {
+    alert("❗ ID artikel tidak valid.");
+    return;
+  }
 
-    // 💥 Exclude field yang tidak boleh dikirim ke backend
-    const {
-      imageFile,
-      author,
-      created_at,
-      updated_at,
-      ...articleWithoutImage
-    } = articleData || {};
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const userRole = storedUser?.role?.toLowerCase() || "contributor";
 
-    let imageUrl = null;
-     if (imageFile) {
+
+  const {
+    imageFile,
+    author,
+    created_at,
+    updated_at,
+    ...articleWithoutImage
+  } = articleData || {};
+
+  let imageUrl = null;
+  if (imageFile) {
     try {
       imageUrl = await uploadImage(imageFile);
     } catch (error) {
       console.error("❌ Gagal upload gambar:", error);
-      
       throw new Error("Gagal upload gambar");
     }
   }
 
-    const payload = {
-      ...articleWithoutImage,
-      image: imageUrl || articleData.image || "",
-      status: "pending", // ✅ Tambahkan ini
-      tags: Array.isArray(articleWithoutImage.tags)
-        ? articleWithoutImage.tags.map((tag) =>
-            tag.trim().toLowerCase().replace(/\s+/g, "-")
-          )
-        : typeof articleWithoutImage.tags === "string"
-        ? articleWithoutImage.tags
-            .split(",")
-            .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
-        : [],
-    };
-
-    try {
-      const response = await customPut(`/api/articles/${articleId}`, payload);
-      console.log("✅ Artikel berhasil diperbarui:", response);
-      return response;
-    } catch (error) {
-      console.error("❌ Gagal update artikel:", error);
-      throw error;
-    }
+  const payload = {
+    ...articleWithoutImage,
+    image: imageUrl || articleData.image || "",
+    status: (userRole === "editor" || userRole === "master") ? "publish" : "pending",
+    tags: Array.isArray(articleWithoutImage.tags)
+      ? articleWithoutImage.tags.map((tag) =>
+          tag.trim().toLowerCase().replace(/\s+/g, "-")
+        )
+      : typeof articleWithoutImage.tags === "string"
+      ? articleWithoutImage.tags
+          .split(",")
+          .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
+      : [],
   };
+
+  try {
+    const response = await customPut(`/api/articles/${articleId}`, payload);
+    console.log("✅ Artikel berhasil diperbarui:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Gagal update artikel:", error);
+    throw error;
+  }
+};
+
 
   const deleteArticleById = async (articleId) => {
     if (!articleId) throw new Error("ID artikel tidak valid");

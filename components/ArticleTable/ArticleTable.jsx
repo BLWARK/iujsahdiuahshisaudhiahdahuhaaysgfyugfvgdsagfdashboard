@@ -33,24 +33,21 @@ const ArticleTable = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  
-
 
   const router = useRouter();
   const articlesPerPage = 15;
 
   useEffect(() => {
-  if (selectedPortal?.platform_id && user?.user_id) {
-    setIsLoading(true);
-    getAuthorArticles(currentPage, sortColumn, sortOrder)
-      .then(() => setIsLoading(false))
-      .catch((err) => {
-        console.error("❌ Gagal memuat artikel:", err);
-        setIsLoading(false);
-      });
-  }
-}, [selectedPortal, user, currentPage, sortColumn, sortOrder]);
-
+    if (selectedPortal?.platform_id && user?.user_id) {
+      setIsLoading(true);
+      getAuthorArticles(currentPage, sortColumn, sortOrder)
+        .then(() => setIsLoading(false))
+        .catch((err) => {
+          console.error("❌ Gagal memuat artikel:", err);
+          setIsLoading(false);
+        });
+    }
+  }, [selectedPortal, user, currentPage, sortColumn, sortOrder]);
 
   const filteredArticles = Array.isArray(articles)
     ? articles.filter(
@@ -77,8 +74,7 @@ const ArticleTable = () => {
 
   const totalPages = authorArticlesMeta?.totalPages || 1;
 
-const currentArticles = articles;
-
+  const currentArticles = articles;
 
   const handlePageChange = (page) => setCurrentPage(page);
 
@@ -115,6 +111,8 @@ const currentArticles = articles;
       console.error("❌ Gagal ambil artikel:", err);
     }
   };
+
+  const handleEdit = (articleId) => handleEditArticle(articleId, router);
 
   const handleDelete = async (articleId) => {
     const result = await Swal.fire({
@@ -161,7 +159,9 @@ const currentArticles = articles;
                 <th
                   key={key}
                   className="border px-4 py-2 cursor-pointer whitespace-nowrap"
-                  onClick={() => key !== "index" && key !== "action" && handleSort(key)}
+                  onClick={() =>
+                    key !== "index" && key !== "action" && handleSort(key)
+                  }
                 >
                   <div className="flex items-center gap-1">
                     {label} {getSortIcon(key)}
@@ -207,6 +207,13 @@ const currentArticles = articles;
                       title="Lihat"
                     >
                       <AiOutlineEye size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(article.article_id)}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Edit Draft"
+                    >
+                      <AiOutlineEdit size={20} />
                     </button>
                     <button
                       className="text-red-500 hover:text-red-700"

@@ -132,51 +132,71 @@ const TambahArtikel = () => {
   }, []);
 
   // ✅ Pastikan platform_id ada sebelum submit
-  const handleSubmitArticle = async () => {
-    const {
-      title,
-      content,
-      image,
-      slug,
-      meta_title,
-      tags,
-      description, // ⬅️ tambahkan
-      category,
-      platform_id,
-    } = articleData;
+const handleSubmitArticle = async () => {
+  const {
+    title,
+    content,
+    image,
+    slug,
+    meta_title,
+    tags,
+    description,
+    category,
+    platform_id,
+  } = articleData;
 
-    // ✅ Cek semua field yang harus diisi
-    if (
-      !title ||
-      !content ||
-      !image ||
-      !slug ||
-      !meta_title ||
-      !tags ||
-      !description || // ⬅️ validasi
-      !category?.length ||
-      !platform_id
-    ) {
-      Swal.fire({
-        icon: "warning",
-        title: "Oops...",
-        text: "Semua field wajib diisi sebelum mengirim artikel!",
-      });
-      return;
-    }
+  if (
+    !title ||
+    !content ||
+    !image ||
+    !slug ||
+    !meta_title ||
+    !tags ||
+    !description ||
+    !category?.length ||
+    !platform_id
+  ) {
+    Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Semua field wajib diisi sebelum mengirim artikel!",
+    });
+    return;
+  }
 
-    try {
-      await submitArticle();
-      localStorage.removeItem("autosave-article"); // 🔥 Hapus setelah submit
-      setSuccessPopupOpen(true);
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal Submit",
-        text: err.message || "Terjadi kesalahan saat mengirim artikel.",
-      });
-    }
-  };
+  try {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const userRole = storedUser?.role?.toLowerCase() || "contributor"; // lowercase untuk konsistensi
+
+    await submitArticle(); // ⬅️ fungsi submit akan set status sesuai role
+
+    localStorage.removeItem("autosave-article");
+
+    // ✅ Popup hanya satu kali & sesuai role
+    const isPublished = userRole === "editor" || userRole === "master";
+
+    Swal.fire({
+  icon: "success",
+  title: isPublished ? "✅ Artikel Dipublikasikan!" : "🕓 Artikel Dikirim!",
+  text: isPublished
+    ? "Artikel berhasil dipublikasikan dan sudah tayang."
+    : "Artikel Anda telah dikirim dan menunggu review.",
+}).then(() => {
+  window.location.reload(); // 🔁 ini akan refresh halaman setelah user klik "OK"
+});
+
+
+    
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal Submit",
+      text: err.message || "Terjadi kesalahan saat mengirim artikel.",
+    });
+  }
+};
+
+
 
  useEffect(() => {
   const lastSaved = localStorage.getItem("autosave-article");
