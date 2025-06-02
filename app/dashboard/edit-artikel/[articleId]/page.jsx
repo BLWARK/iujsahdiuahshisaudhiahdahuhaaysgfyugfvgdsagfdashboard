@@ -151,6 +151,16 @@ const EditArtikelPage = () => {
     return;
   }
 
+   const wordCount = slug.trim().split("-").length;
+      if (wordCount > 14) {
+        Swal.fire({
+          icon: "warning",
+          title: "Slug terlalu panjang",
+          text: "Slug maksimal hanya boleh terdiri dari 14 kata.",
+        });
+        return;
+      }
+
   try {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     const userRole = storedUser?.role?.toLowerCase() || "contributor";
