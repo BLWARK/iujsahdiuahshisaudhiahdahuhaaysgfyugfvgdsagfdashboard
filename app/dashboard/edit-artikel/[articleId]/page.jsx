@@ -120,23 +120,75 @@ const EditArtikelPage = () => {
   }, []);
 
   const handleSubmitArticle = async () => {
-    if (!articleData.platform_id) {
-      alert("❗ Pilih portal terlebih dahulu sebelum mengirim artikel.");
-      return;
+  const {
+    title,
+    content,
+    image,
+    slug,
+    meta_title,
+    tags,
+    description,
+    category,
+    platform_id,
+  } = articleData;
+
+  if (
+    !title ||
+    !content ||
+    !image ||
+    !slug ||
+    !meta_title ||
+    !tags ||
+    !description ||
+    !category?.length ||
+    !platform_id
+  ) {
+    Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Semua field wajib diisi sebelum mengirim artikel!",
+    });
+    return;
+  }
+
+  try {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const userRole = storedUser?.role?.toLowerCase() || "contributor";
+
+    if (isEditMode) {
+      await submitEditedArticle(articleId, articleData);
+    } else {
+      await submitArticle();
     }
 
-    try {
-      if (isEditMode) {
-        await submitEditedArticle(articleId, articleData);
-      } else {
-        await submitArticle();
-      }
-      setSuccessPopupOpen(true);
-    } catch (err) {
-      console.error("❌ Gagal submit artikel:", err);
-      alert("Terjadi kesalahan saat menyimpan artikel.");
-    }
-  };
+    localStorage.removeItem("autosave-article");
+
+    const isPublished = userRole === "editor" || userRole === "master";
+
+    Swal.fire({
+      icon: "success",
+      title: isPublished ? "✅ Artikel Dipublikasikan!" : "🕓 Artikel Dikirim!",
+      text: isPublished
+        ? "Artikel berhasil dipublikasikan dan sudah tayang."
+        : "Artikel Anda telah dikirim dan menunggu review.",
+    }).then(() => {
+      localStorage.removeItem("autosave-article");
+
+      Object.keys(articleData).forEach((key) => {
+        updateArticleData(key, key === "category" ? [] : "");
+      });
+
+      window.location.reload();
+    });
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal Submit",
+      text: err.message || "Terjadi kesalahan saat mengirim artikel.",
+    });
+  }
+};
+
 
   const handleSaveDraft = async () => {
     try {
