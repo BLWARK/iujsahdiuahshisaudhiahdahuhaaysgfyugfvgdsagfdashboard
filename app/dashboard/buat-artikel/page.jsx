@@ -175,17 +175,22 @@ const TambahArtikel = () => {
       // ✅ Popup hanya satu kali & sesuai role
       const isPublished = userRole === "editor" || userRole === "master";
 
-      Swal.fire({
-        icon: "success",
-        title: isPublished
-          ? "✅ Artikel Dipublikasikan!"
-          : "🕓 Artikel Dikirim!",
-        text: isPublished
-          ? "Artikel berhasil dipublikasikan dan sudah tayang."
-          : "Artikel Anda telah dikirim dan menunggu review.",
-      }).then(() => {
-        window.location.reload(); // 🔁 ini akan refresh halaman setelah user klik "OK"
+       Swal.fire({
+      icon: "success",
+      title: isPublished ? "✅ Artikel Dipublikasikan!" : "🕓 Artikel Dikirim!",
+      text: isPublished
+        ? "Artikel berhasil dipublikasikan dan sudah tayang."
+        : "Artikel Anda telah dikirim dan menunggu review.",
+    }).then(() => {
+      localStorage.removeItem("autosave-article"); // ✅ Hapus autosave HANYA setelah sukses
+
+      // ✅ Kosongkan semua field artikel
+      Object.keys(articleData).forEach((key) => {
+        updateArticleData(key, key === "category" ? [] : "");
       });
+
+      window.location.reload(); // atau redirect ke halaman lain jika diinginkan
+    });
     } catch (err) {
       Swal.fire({
         icon: "error",
