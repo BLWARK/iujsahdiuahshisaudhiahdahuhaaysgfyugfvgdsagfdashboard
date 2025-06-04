@@ -454,11 +454,11 @@ export const BackProvider = ({ children }) => {
   }, []); // dependency kosong, jika tidak tergantung pada state lain
 
   const getArticlesLink = useCallback(
-    async (platformId, page = 1, limit = 15) => {
+    async (platformId, page = 1, limit = 50) => {
       if (!platformId) return;
       try {
         const response = await customGet(
-          `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=all`
+          `/api/articles?platform_id=${platformId}&page=${page}&limit=${limit}&status=publish`
         );
         setArticles(response.data);
         return response;

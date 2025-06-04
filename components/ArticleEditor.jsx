@@ -18,6 +18,7 @@ const ArticleEditor = () => {
     updateArticleData,
     uploadArticleImage,
     getArticlesLink,
+    
   } = useBackend();
   const [editorLoaded, setEditorLoaded] = useState(false);
   const apiKey =
@@ -125,7 +126,11 @@ const ArticleEditor = () => {
 
             link_list: async function (success) {
               try {
-                const articles = await getArticlesLink(1, "ALL"); // Ambil semua artikel halaman 1
+               const platformId =
+  JSON.parse(localStorage.getItem("selectedPortal"))?.platform_id || 1;
+
+const articles = await getArticlesLink(platformId, "ALL");
+ // Ambil semua artikel halaman 1
 
                 const links =
                   articles?.data?.map((article) => ({

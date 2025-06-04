@@ -2,7 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 
-const ArticlePopup = ({ articles = [], meta = { page: 1, totalPages: 1 }, onClose, onSelect, onPageChange }) => {
+const ArticlePopup = ({
+  articles = [],
+  meta = { page: 1, totalPages: 1 },
+  onClose,
+  onSelect,
+  onPageChange,
+  regionalPortals = [],
+  filterPlatformId,
+  setFilterPlatformId,
+}) => {
+
   // ✅ State langsung ambil dari props.meta (gunakan nilai default jika kosong)
   const [currentPage, setCurrentPage] = useState(meta?.page || 1);
   const [totalPages, setTotalPages] = useState(meta?.totalPages || 1);
@@ -48,6 +58,30 @@ const ArticlePopup = ({ articles = [], meta = { page: 1, totalPages: 1 }, onClos
           <IoClose size={24} />
         </button>
 
+        {/* 🔄 TOMBOL PILIH PLATFORM DALAM POPUP */}
+<div className="flex flex-wrap gap-2 mb-4">
+  {regionalPortals.map((portal) => (
+    <button
+      key={portal.platform_id}
+      onClick={() => {
+        setFilterPlatformId(portal.platform_id);
+        onPageChange(1); // reset ke page 1
+      }}
+      className={`px-3 py-4 rounded-lg border text-sm ${
+        filterPlatformId === portal.platform_id
+          ? "bg-pink-600 text-white"
+          : "bg-white text-gray-800 hover:bg-gray-100"
+      }`}
+    >
+      {portal.platform_desc}
+    </button>
+  ))}
+</div>
+
+<div className="w-full h-[1px] bg-gray-200 my-5"></div>
+<h2 className="text-xl font-bold mb-4">
+          ✨ Daftar Artikel 
+        </h2>
         {/* ✅ Daftar Artikel */}
         {articles.length === 0 ? (
           <p className="text-center text-gray-500">Tidak ada artikel...</p>

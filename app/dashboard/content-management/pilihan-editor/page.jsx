@@ -17,15 +17,24 @@ const EditorChoicePage = () => {
     selectedPortal,
     articles,
     getArticles,
-    getEditorChoice, 
-    saveEditorChoice, 
+    getEditorChoice,
+    saveEditorChoice,
+    platforms,
   } = useBackend();
+
+  const [filterPlatformId, setFilterPlatformId] = useState(1); // default Nasional
+  const allowedIds = [1, 13, 14, 15, 16, 17];
+  const regionalPortals = platforms.filter((p) =>
+    allowedIds.includes(p.platform_id)
+  );
+
+  const [fetchedArticles, setFetchedArticles] = useState([]);
 
   const [editorChoices, setEditorChoices] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [currentReplaceIndex, setCurrentReplaceIndex] = useState(null);
   const [notification, setNotification] = useState(null);
-  
+
   // ✅ State loading terpisah
   const [isLoadingEditorChoices, setIsLoadingEditorChoices] = useState(true);
   const [isLoadingArticles, setIsLoadingArticles] = useState(true);
@@ -37,75 +46,104 @@ const EditorChoicePage = () => {
   const hasFetched = useRef(false);
 
   // ✅ Fetch Editor Choices saat platform_id berubah (TIDAK TERPENGARUH Pagination)
+  // useEffect(() => {
+  //   const fetchEditorChoices = async () => {
+  //     if (!filterPlatformId || hasFetched.current) return;
+
+  //     setIsLoadingEditorChoices(true);
+
+  //     try {
+  //       const editorData = await getEditorChoice(filterPlatformId);
+  //       const mapped = editorData
+  //         .map((item) => ({
+  //           position: item.position,
+  //           article_id: item.article?.article_id || item.article_id,
+  //           title: item.article?.title || "No Title",
+  //           image: item.article?.image || "/placeholder-image.jpg",
+  //           date: item.article?.date || "-",
+  //           author: item.article?.author?.fullname || "Unknown Author",
+  //           authorAvatar: item.article?.author?.avatar || "/default-avatar.png",
+  //         }))
+  //         .sort((a, b) => a.position - b.position);
+
+  //       setEditorChoices(mapped);
+  //       hasFetched.current = true;
+  //     } catch (err) {
+  //       console.error("Error fetching editor choices:", err);
+  //     } finally {
+  //       setIsLoadingEditorChoices(false);
+  //     }
+  //   };
+
+  //   fetchEditorChoices();
+  // }, [filterPlatformId]);
+
+
   useEffect(() => {
-    const fetchEditorChoices = async () => {
-      if (!selectedPortal?.platform_id || hasFetched.current) return;
+  const fetchEditorChoices = async () => {
+    if (hasFetched.current) return;
 
-      setIsLoadingEditorChoices(true);
+    setIsLoadingEditorChoices(true);
 
-      try {
-        console.log("✅ Fetching editor choices...");
-        const editorData = await getEditorChoice(selectedPortal.platform_id);
+    try {
+      const editorData = await getEditorChoice(1); // 👈 Tetap platform_id = 1
+      const mapped = Array.isArray(editorData)
+        ? editorData.map((item) => ({
+            position: item.position,
+            article_id: item.article?.article_id || item.article_id,
+            title: item.article?.title || "No Title",
+            image: item.article?.image || "/placeholder-image.jpg",
+            date: item.article?.date || "-",
+            author: item.article?.author?.fullname || "Unknown Author",
+            authorAvatar: item.article?.author?.avatar || "/default-avatar.png",
+          })).sort((a, b) => a.position - b.position)
+        : [];
 
-        const mappedEditorChoices = editorData.map((item) => ({
-          position: item.position,
-          article_id: item.article?.article_id || item.article_id,
-          title: item.article?.title || "No Title",
-          image: item.article?.image || "/placeholder-image.jpg",
-          date: item.article?.date || "-",
-          author: item.article?.author?.fullname || "Unknown Author",
-          authorAvatar: item.article?.author?.avatar || "/default-avatar.png",
-        }))
-        .sort((a, b) => a.position - b.position);
+      setEditorChoices(mapped);
+      hasFetched.current = true;
+    } catch (err) {
+      console.error("Error fetching editor choices:", err);
+    } finally {
+      setIsLoadingEditorChoices(false);
+    }
+  };
 
-        setEditorChoices(mappedEditorChoices);
-        hasFetched.current = true;
-      } catch (error) {
-        console.error("❌ Error fetching editor choices:", error);
-      } finally {
-        setIsLoadingEditorChoices(false);
-      }
-    };
+  fetchEditorChoices();
+}, []); // ⛔️ Hapus filterPlatformId dari depedensi
 
-    fetchEditorChoices();
-  }, [selectedPortal?.platform_id, getEditorChoice]); // ✅ TANPA currentPage!
 
   // ✅ Fetch Articles saat currentPage berubah (TIDAK TERPENGARUH Kolom Atas)
   useEffect(() => {
-    if (!selectedPortal?.platform_id) return;
+    if (!filterPlatformId) return;
 
     const fetchArticles = async () => {
       setIsLoadingArticles(true);
-
       try {
-        console.log("✅ Fetching articles...");
         const response = await getArticles(
-          selectedPortal.platform_id,
+          filterPlatformId,
           currentPage,
           articlesPerPage
         );
-
+        setFetchedArticles(response?.data || []);
         setMeta(response?.meta || {});
-      } catch (error) {
-        console.error("❌ Error fetching articles:", error);
+      } catch (err) {
+        console.error("Error fetching articles:", err);
       } finally {
         setIsLoadingArticles(false);
       }
     };
 
     fetchArticles();
-  }, [selectedPortal?.platform_id, currentPage, getArticles]);
+  }, [filterPlatformId, currentPage]);
 
   // ✅ Reset saat platform berubah
   useEffect(() => {
-    if (selectedPortal?.platform_id) {
-      hasFetched.current = false;
-    }
-  }, [selectedPortal?.platform_id]);
+    hasFetched.current = false;
+  }, [filterPlatformId]);
 
   // ✅ Filter artikel berdasarkan selectedPortal.platform_id
   const filteredArticles = articles.filter(
-    (article) => article.platform_id === selectedPortal?.platform_id
+    (article) => article.platform_id === filterPlatformId
   );
 
   // ✅ Sorting berdasarkan tanggal (descending: artikel terbaru di atas)
@@ -161,45 +199,44 @@ const EditorChoicePage = () => {
     });
   };
 
-   // ✅ Buka popup ganti headline → FIXED ✅
-   const openReplacePopup = (index) => {
+  // ✅ Buka popup ganti headline → FIXED ✅
+  const openReplacePopup = (index) => {
     setCurrentReplaceIndex(index);
     setIsPopupOpen(true);
   };
 
-   // ✅ Tutup popup
-   const closeReplacePopup = () => {
+  // ✅ Tutup popup
+  const closeReplacePopup = () => {
     setIsPopupOpen(false);
     setCurrentReplaceIndex(null);
   };
 
- // ✅ Ganti artikel (tambahkan validasi ID)
-const replaceArticle = (article) => {
-  setEditorChoices((prevChoices) => {
-    // ✅ Cek apakah article_id sudah ada di daftar yang sedang aktif
-    const isAlreadyAdded = prevChoices.some(
-      (item) => item.article_id === article.article_id
-    );
+  // ✅ Ganti artikel (tambahkan validasi ID)
+  const replaceArticle = (article) => {
+    setEditorChoices((prevChoices) => {
+      // ✅ Cek apakah article_id sudah ada di daftar yang sedang aktif
+      const isAlreadyAdded = prevChoices.some(
+        (item) => item.article_id === article.article_id
+      );
 
-    if (isAlreadyAdded) {
-      console.log("❌ Artikel sudah ada di daftar editor choice");
-      // ✅ Tampilkan notifikasi custom kalau artikel sudah ada
-      setNotification({
-        type: "error", // ✅ Bisa "success" atau "error"
-        message: `Artikel "${article.title}" sudah ada di daftar!`,
-      });
-      return prevChoices; // ✅ Jangan ubah state jika ada duplikasi
-    }
+      if (isAlreadyAdded) {
+        console.log("❌ Artikel sudah ada di daftar editor choice");
+        // ✅ Tampilkan notifikasi custom kalau artikel sudah ada
+        setNotification({
+          type: "error", // ✅ Bisa "success" atau "error"
+          message: `Artikel "${article.title}" sudah ada di daftar!`,
+        });
+        return prevChoices; // ✅ Jangan ubah state jika ada duplikasi
+      }
 
-    // ✅ Jika ID unik → Lanjutkan penggantian artikel
-    const updatedChoices = [...prevChoices];
-    updatedChoices[currentReplaceIndex] = article;
-    return updatedChoices;
-  });
+      // ✅ Jika ID unik → Lanjutkan penggantian artikel
+      const updatedChoices = [...prevChoices];
+      updatedChoices[currentReplaceIndex] = article;
+      return updatedChoices;
+    });
 
-  setIsPopupOpen(false);
-};
-
+    setIsPopupOpen(false);
+  };
 
   // ✅ Fungsi untuk menyimpan editorChoices ke backend
   const handleSaveEditorChoices = async () => {
@@ -210,7 +247,7 @@ const replaceArticle = (article) => {
       });
       return;
     }
-  
+
     try {
       await saveEditorChoice(editorChoices);
       setNotification({
@@ -224,7 +261,6 @@ const replaceArticle = (article) => {
       });
     }
   };
-  
 
   // ✅ Fungsi untuk menutup popup notifikasi dan refresh halaman
   const handleCloseNotification = () => {
@@ -251,7 +287,7 @@ const replaceArticle = (article) => {
           <p className="text-center text-gray-500">Loading artikel...</p>
         ) : (
           <div className="grid 2xl:grid-cols-4 xl:grid-cols-4 lg:grid-cols-4 grid-cols-1 gap-4">
-            {editorChoices.map((choice, index) => (
+           {editorChoices.slice(0, 4).map((choice, index) => (
               <div
                 key={choice.article_id}
                 className="border rounded-md p-4 shadow bg-white relative"
@@ -304,9 +340,33 @@ const replaceArticle = (article) => {
 
       {/* Daftar Semua Artikel dengan Pagination */}
       <div className="border p-4 rounded-lg shadow-md bg-white">
-        <h2 className="text-xl font-bold mb-4">
-          📚 Pilih Berita - {selectedPortal?.platform_name || "Pilih Portal"}
+        
+
+        <h2 className="text-2xl font-bold mb-4">
+          ✨ Editor Choice 
         </h2>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {regionalPortals.map((portal) => (
+            <button
+              key={portal.platform_id}
+              onClick={() => {
+                setFilterPlatformId(portal.platform_id);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-4 rounded-lg border text-sm ${
+                filterPlatformId === portal.platform_id
+
+                  ? "bg-pink-600 text-white"
+                  : "bg-white text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              {portal.platform_desc}
+
+            </button>
+          ))}
+        </div>
+
         {isLoadingArticles ? (
           <p className="text-center text-gray-500">Loading artikel...</p>
         ) : (
@@ -349,23 +409,26 @@ const replaceArticle = (article) => {
 
       {/* ✅ Popup untuk mengganti artikel */}
       {isPopupOpen && (
-        <ArticlePopup
-          articles={sortedFilteredArticles}
-          meta={meta}
-          onClose={() => setIsPopupOpen(false)}
-          onSelect={replaceArticle}
-          onPageChange={handlePageChange} // ✅ Trigger parent → Fetch data baru
-        />
+       <ArticlePopup
+  articles={[...fetchedArticles].sort((a, b) => new Date(b.date) - new Date(a.date))}
+  meta={meta}
+  onClose={() => setIsPopupOpen(false)}
+  onSelect={replaceArticle}
+  onPageChange={handlePageChange}
+  regionalPortals={regionalPortals}
+  filterPlatformId={filterPlatformId}
+  setFilterPlatformId={setFilterPlatformId}
+/>
+
       )}
 
-{notification?.message && (
-  <NotifHeadEditor
-    message={notification.message}
-    type={notification.type}
-    onClose={() => setNotification(null)}
-  />
-)}
-
+      {notification?.message && (
+        <NotifHeadEditor
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 };
