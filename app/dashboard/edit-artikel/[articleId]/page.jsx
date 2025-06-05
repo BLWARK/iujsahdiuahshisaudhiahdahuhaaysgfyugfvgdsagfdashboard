@@ -5,6 +5,8 @@ import { AiOutlineSave, AiOutlineSend } from "react-icons/ai";
 import { useBackend } from "@/context/BackContext";
 import ArticleEditor from "@/components/ArticleEditor";
 import SuccessPopup from "@/components/SuccessPopup";
+import PortalSelector from "../../../../components/navigation/PortalSelector";
+import SettingsDropdown from "../../../../components/navigation/SettingsDropdown";
 import Swal from "sweetalert2";
 import { DateTime } from "luxon";
 
@@ -22,6 +24,7 @@ const EditArtikelPage = () => {
   } = useBackend();
 
   const [categories, setCategories] = useState([]);
+  const [, setSelectedPortal] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [isSuccessPopupOpen, setSuccessPopupOpen] = useState(false);
   const [isDescriptionEdited, setIsDescriptionEdited] = useState(false);
@@ -226,6 +229,11 @@ const EditArtikelPage = () => {
     }
   };
 
+  const handlePortalChange = (portal) => {
+      setSelectedPortal(portal);
+      setCategories(loadCategoriesByPortal(portal.id)); // ✅ Update kategori sesuai portal yang dipilih
+    };
+
   const handleClosePopup = () => {
     setSuccessPopupOpen(false);
     window.location.reload();
@@ -336,7 +344,18 @@ const EditArtikelPage = () => {
           </div>
         </div>
         <div className="flex flex-col border  p-10">
-          <h3 className="font-semibold mb-2">Kategori</h3>
+           <div className="flex flex-col items-start justify-start gap-2 ">
+          <p className="text-pink-500 font-bold text-lg">Regional</p>
+          {/* ✅ Tambahkan `onPortalChange` */}
+          <PortalSelector
+            selectedPortal={selectedPortal}
+            setSelectedPortal={setSelectedPortal}
+            onPortalChange={handlePortalChange}
+          />
+          {/* <Notification user={user} /> */}
+          <SettingsDropdown />
+        </div>
+          <h3 className=" mb-2 text-pink-500 font-bold">Kategori</h3>
           <div className="grid grid-cols-1 gap-4">
             {categories.map((cat) => (
               <label key={cat.id} className="flex items-center gap-2">

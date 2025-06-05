@@ -6,6 +6,8 @@ import { useBackend } from "@/context/BackContext";
 import ArticleEditor from "@/components/ArticleEditor";
 import { DateTime } from "luxon";
 import SuccessPopup from "@/components/SuccessPopup"; // ✅ Import Popup
+import PortalSelector from "../../../components/navigation/PortalSelector";
+import SettingsDropdown from "../../../components/navigation/SettingsDropdown";
 import Swal from "sweetalert2";
 
 const TambahArtikel = () => {
@@ -14,15 +16,18 @@ const TambahArtikel = () => {
     updateArticleData,
     saveDraft,
     submitArticle,
+    
     selectedPortal,
     getCategoriesByPlatformId,
   } = useBackend();
   const [isSlugEdited, setIsSlugEdited] = useState(false);
+  const [, setSelectedPortal] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [isSuccessPopupOpen, setSuccessPopupOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isDescriptionEdited, setIsDescriptionEdited] = useState(false);
+  
 
   // ✅ Pastikan `platform_id` terupdate dari `selectedPortal`
   useEffect(() => {
@@ -246,6 +251,11 @@ const TambahArtikel = () => {
     }
   }, []);
 
+  const handlePortalChange = (portal) => {
+      setSelectedPortal(portal);
+      setCategories(loadCategoriesByPortal(portal.id)); // ✅ Update kategori sesuai portal yang dipilih
+    };
+
   const handleClosePopup = () => {
     setSuccessPopupOpen(false);
     window.location.reload(); // 🔥 Force reload halaman setelah klik "OK"
@@ -364,7 +374,18 @@ const TambahArtikel = () => {
         </div>
 
         <div className="border max-w-1/2 border-gray-300 rounded-md p-4">
-          <h3 className="text-lg font-medium mb-2">Kategori:</h3>
+        <div className="flex flex-col items-start justify-start gap-2 ">
+          <p className="text-pink-500 font-bold text-lg">Regional</p>
+          {/* ✅ Tambahkan `onPortalChange` */}
+          <PortalSelector
+            selectedPortal={selectedPortal}
+            setSelectedPortal={setSelectedPortal}
+            onPortalChange={handlePortalChange}
+          />
+          {/* <Notification user={user} /> */}
+          <SettingsDropdown />
+        </div>
+          <h3 className="text-lg  mb-2 text-pink-500 font-bold">Kategori:</h3>
           <div className="flex flex-col gap-4">
             {categories.map((category) => (
               <label key={category.id} className="flex items-center gap-2">
@@ -393,6 +414,7 @@ const TambahArtikel = () => {
               </label>
             ))}
           </div>
+           
         </div>
       </div>
 
