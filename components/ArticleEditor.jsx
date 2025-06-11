@@ -135,7 +135,7 @@ const articles = await getArticlesLink(platformId, "ALL");
                 const links =
                   articles?.data?.map((article) => ({
                     title: article.title,
-                    value: `https://xyzone.media/artikel/${article.article_id}/${article.slug}`, // ✅ Tambahkan article_id ke URL
+                    value: `https://xyzonemedia.com/artikel/${article.article_id}/${article.slug}`, // ✅ Tambahkan article_id ke URL
                   })) || [];
 
                 success(links);
