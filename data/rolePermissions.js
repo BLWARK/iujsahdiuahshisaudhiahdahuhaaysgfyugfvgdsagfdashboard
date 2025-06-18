@@ -4,6 +4,7 @@ export const rolePermissions = {
       "post-management",
       "content-management",
       "user-management",
+      "analytic",
       "marketing",
       "reports",
     ],
@@ -15,7 +16,7 @@ export const rolePermissions = {
       "marketing",
       "reports",
     ],
-    "Editor": ["dashboard", "post-management", "content-management", "user-management", "reports"],
+    "Editor": ["dashboard", "post-management", "content-management", "user-management", "analytic", "reports"],
     "Contributor": ["dashboard", "post-management"],
   };
   

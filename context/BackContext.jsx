@@ -29,6 +29,13 @@ export const BackProvider = ({ children }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [draftMeta, setDraftMeta] = useState({ totalItems: 0 });
   const [authorArticlesMeta, setAuthorArticlesMeta] = useState(null);
+  const [dailyChart, setDailyChart] = useState([]);
+
+  const [weeklyChart, setWeeklyChart] = useState([]);
+  const [monthlyChart, setMonthlyChart] = useState([]);
+  const [weeklyProgress, setWeeklyProgress] = useState([]);
+  const [isLoadingChart, setIsLoadingChart] = useState(false);
+
 
   const [articleData, setArticleData] = useState({
     platform_id: null,
@@ -92,6 +99,7 @@ export const BackProvider = ({ children }) => {
       if (platformId) {
         console.log("🔄 Memuat artikel berdasarkan platform_id:", platformId);
         setSelectedPortal(storedPortal || storedPlatforms[0]);
+        
       } else {
         console.warn("⚠️ Tidak ada portal yang dipilih. Redirect ke login...");
         router.push("/select-portal");
@@ -1082,6 +1090,107 @@ const uploadImage = async (imageFile) => {
       return [];
     }
   }, []);
+
+
+const getDailyChart = async () => {
+  try {
+    setIsLoadingChart(true);
+
+    const url = `/api/analytics/chart/daily`;
+    const res = await customGet(url);
+    const data = res?.data;
+
+    console.log("🔥 setDailyChart (default):", data);
+    setDailyChart(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("❌ Gagal ambil daily chart:", err);
+    setDailyChart([]);
+  } finally {
+    setIsLoadingChart(false);
+  }
+};
+
+
+const getDailyChartByDateRange = async (startDate, endDate) => {
+  try {
+    setIsLoadingChart(true);
+
+    const url = `/api/analytics/chart/date-range?date_from=${startDate}&date_to=${endDate}`;
+    const res = await customGet(url);
+    const raw = res?.data;
+
+    // 🧠 Adaptasi dari struktur response
+    const adapted = raw?.chartData?.map((item) => ({
+      date: item.period, // ⬅️ rename agar sinkron di frontend
+      totalVisitors: item.count, // ⬅️ rename sesuai ekspektasi UI
+    }));
+
+    console.log("🔥 Adapted chartData:", adapted);
+    setDailyChart(Array.isArray(adapted) ? adapted : []);
+  } catch (err) {
+    console.error("❌ Gagal ambil chart:", err);
+    setDailyChart([]);
+  } finally {
+    setIsLoadingChart(false);
+  }
+};
+
+
+
+
+
+
+const getWeeklyChart = async () => {
+  try {
+    const res = await customGet("/api/analytics/chart/weekly");
+    setWeeklyChart(res?.data || []);
+  } catch (err) {
+    console.error("Failed to fetch weekly chart:", err);
+    setWeeklyChart([]);
+  }
+};
+
+
+  const getMonthlyChart = async () => {
+    try {
+      const res = await customGet("/api/analytics/chart/monthly");
+      setMonthlyChart(res?.data?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch monthly chart:", err);
+    }
+  };
+
+  const getWeeklyProgress = async () => {
+    try {
+      const res = await customGet("/api/analytics/chart/weekly-progress");
+      setWeeklyProgress(res?.data?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch weekly progress:", err);
+    }
+  };
+
+  useEffect(() => {
+  if (selectedPortal?.platform_id) {
+    getDailyChart(selectedPortal.platform_id);
+    getWeeklyChart(selectedPortal.platform_id);
+    getMonthlyChart(selectedPortal.platform_id);
+    getWeeklyProgress(selectedPortal.platform_id);
+  }
+}, [selectedPortal]);
+
+const getUserArticleCount = async () => {
+  try {
+    const res = await customGet("/api/analytics/users/article-count");
+    return res.data?.users || []; // ✅ ambil dari res.data.users
+  } catch (err) {
+    console.error("❌ Gagal ambil artikel per user:", err);
+    return [];
+  }
+};
+
+
+
+  
   
 
   // ✅ Fungsi Logout
@@ -1158,6 +1267,16 @@ const uploadImage = async (imageFile) => {
       markArticleAsDeleted,
       getDeletedArticles,
       authorArticlesMeta,
+       dailyChart,
+        weeklyChart,
+        monthlyChart,
+        weeklyProgress,
+        getDailyChart,
+        getWeeklyChart,
+        getMonthlyChart,
+        getWeeklyProgress,
+        getDailyChartByDateRange,
+        getUserArticleCount,
     }),
     [
       user,
@@ -1168,6 +1287,10 @@ const uploadImage = async (imageFile) => {
       articles,
       selectedPortal,
       isSuccessPopup,
+      dailyChart,   
+      weeklyChart,     // ✅ tambahkan ini
+      isLoadingChart,
+      
     ]
   );
 

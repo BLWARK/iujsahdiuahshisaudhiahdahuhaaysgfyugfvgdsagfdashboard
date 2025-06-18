@@ -215,10 +215,10 @@ const HeadlineByCategoryPage = () => {
     }
   };
 
-  const handleCloseNotification = () => {
-    setNotification(null);
-    window.location.reload();
-  };
+ const handleCloseNotification = () => {
+  setNotification(null); // ✅ Cukup tutup notif saja
+};
+
 
   const totalPages = meta?.totalPages || 1;
 

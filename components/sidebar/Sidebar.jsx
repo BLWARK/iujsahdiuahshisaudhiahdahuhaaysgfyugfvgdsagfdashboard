@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AiOutlinePlus } from "react-icons/ai";
 import { BiBarChart } from "react-icons/bi";
-import { MdDashboard } from "react-icons/md";
+import { MdDashboard, MdOutlineAnalytics } from "react-icons/md";
 import { TbFileSettings } from "react-icons/tb";
 import { LuNotebookPen } from "react-icons/lu";
 import { PiSealPercent } from "react-icons/pi";
@@ -76,7 +76,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             children: [
               { name: "All Artikel", href: "/dashboard/user-management/all-artikel" },
               { name: "Kelola User", href: "/dashboard/user-management/kelola-user" },
-              { name: "Analytic", href: "/dashboard/user-management/analytic" },
+              
+            ],
+          },
+           {
+            name: "Analytic",
+            icon: MdOutlineAnalytics,
+            submenuKey: "analytic",
+            feature: "analytic",
+            children: [
+              { name: "Website Traffic", href: "/dashboard/analytic/web-traffic" },
+              { name: "User Analytic", href: "/dashboard/analytic/user-analytic" },
+              { name: "Ads Traffic", href: "/dashboard/analytic/ads-analytic" },
             ],
           },
           {

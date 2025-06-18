@@ -1,64 +1,62 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
-import StatsChart from "@/components/dashboard/StatsChart";
-import { userStats } from "@/data/dashboardData"; // ✅ Gunakan data dummy langsung
+import { BackContext } from "@/context/BackContext";
 
 const DashboardPage = () => {
+  const { getUserArticleCount } = useContext(BackContext);
   const [user, setUser] = useState(null);
+  const [articleCount, setArticleCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState(null); // Data statistik bisa null awalnya
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     if (!storedUser) {
-      console.warn("🚨 User tidak ditemukan! Redirecting to login...");
       router.push("/login");
       return;
     }
-
     setUser(storedUser);
-    console.log("✅ [Dashboard] User ditemukan:", storedUser);
+  }, []);
 
-    // ✅ Gunakan Data Dummy
-    useDummyStats(storedUser.user_id);
-  }, [router]);
+  useEffect(() => {
+    const fetchArticleCount = async () => {
+      if (!user?.user_id) return;
 
-  // ✅ Gunakan Data Dummy untuk Statistik
-  const useDummyStats = (userId) => {
-    const dummyStats = userStats[userId]?.stats || userStats[1]?.stats; // Default ke user ID 1 jika tidak ada
-    setStats(dummyStats);
-    console.log("🚀 Menggunakan Data Dummy untuk Statistik!", dummyStats);
-    setIsLoading(false);
-  };
+      try {
+        const allUsers = await getUserArticleCount();
+        const me = allUsers.find((u) => u.userId === user.user_id);
+        if (me) setArticleCount(me.articleCount);
+      } catch (err) {
+        console.error("Gagal ambil artikel user:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (isLoading) return <p>Loading...</p>;
-  if (!user) return <p className="text-center mt-10">Redirecting to login...</p>;
+    fetchArticleCount();
+  }, [user]);
+
+  if (isLoading) return <p className="p-6">Loading...</p>;
 
   return (
     <div className="p-6">
-      {/* Statistik Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="p-4 bg-white shadow-sm rounded-md text-left">
           <h2 className="font-semibold mb-2">Total Articles</h2>
-          <p className="text-lg font-bold">0</p>
+          <p className="text-lg font-bold">{articleCount}</p>
         </div>
 
         <div className="p-4 border rounded-md bg-white shadow-sm">
           <h3 className="font-semibold mb-2">Total Views</h3>
-          <p className="font-bold text-lg">0</p>
+          <p className="font-bold text-lg">-</p>
         </div>
 
         <div className="p-4 border rounded-md bg-white shadow-sm">
           <h3 className="font-semibold mb-2">Total Earnings</h3>
-          <p className="font-bold text-lg">IDR 0</p>
+          <p className="font-bold text-lg">IDR -</p>
         </div>
       </div>
-
-      {/* 📊 Komponen Statistik */}
-      {/* <StatsChart stats={stats} /> */}
     </div>
   );
 };
