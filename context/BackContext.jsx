@@ -1114,26 +1114,30 @@ const getDailyChart = async () => {
 const getDailyChartByDateRange = async (startDate, endDate) => {
   try {
     setIsLoadingChart(true);
-
     const url = `/api/analytics/chart/date-range?date_from=${startDate}&date_to=${endDate}`;
     const res = await customGet(url);
     const raw = res?.data;
 
-    // 🧠 Adaptasi dari struktur response
     const adapted = raw?.chartData?.map((item) => ({
-      date: item.period, // ⬅️ rename agar sinkron di frontend
-      totalVisitors: item.count, // ⬅️ rename sesuai ekspektasi UI
+      date: item.date, // 🔁 pakai item.date sesuai struktur response kamu
+      totalVisitors: item.totalVisitors,
+      uniqueVisitors: item.uniqueVisitors,
+      duration: item.duration,
     }));
 
     console.log("🔥 Adapted chartData:", adapted);
+
     setDailyChart(Array.isArray(adapted) ? adapted : []);
+    return adapted; // ✅ tambahkan ini agar bisa digunakan di handleApply
   } catch (err) {
     console.error("❌ Gagal ambil chart:", err);
     setDailyChart([]);
+    return [];
   } finally {
     setIsLoadingChart(false);
   }
 };
+
 
 
 
@@ -1187,6 +1191,38 @@ const getUserArticleCount = async () => {
     return [];
   }
 };
+
+const getReferrerSourcesByRange = async (dateFrom, dateTo) => {
+  try {
+    const res = await customGet(
+      `/api/analytics/referrers/sources?limit=50&order_by=referrer_count&order_direction=desc&date_from=${dateFrom}&date_to=${dateTo}&group_by=domain`
+    );
+    return res?.data;
+  } catch (error) {
+    console.error("Failed to fetch referrer sources", error);
+    return null;
+  }
+};
+
+
+const getReferrerComparisonSources = async (dateFrom, dateTo, compareFrom, compareTo) => {
+  try {
+    const [mainRes, compareRes] = await Promise.all([
+      getReferrerSourcesByRange(dateFrom, dateTo),
+      getReferrerSourcesByRange(compareFrom, compareTo),
+    ]);
+
+    return {
+      main: mainRes?.referrers || [],
+      compare: compareRes?.referrers || [],
+    };
+  } catch (err) {
+    console.error("❌ Gagal fetch referrer comparison sources:", err);
+    return { main: [], compare: [] };
+  }
+};
+
+
 
 
 
@@ -1277,6 +1313,10 @@ const getUserArticleCount = async () => {
         getWeeklyProgress,
         getDailyChartByDateRange,
         getUserArticleCount,
+         setDailyChart,
+         getReferrerSourcesByRange,
+         getReferrerComparisonSources,
+
     }),
     [
       user,
@@ -1290,6 +1330,7 @@ const getUserArticleCount = async () => {
       dailyChart,   
       weeklyChart,     // ✅ tambahkan ini
       isLoadingChart,
+      
       
     ]
   );

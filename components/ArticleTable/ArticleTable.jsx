@@ -139,11 +139,11 @@ const ArticleTable = () => {
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
+    <div className="bg-white p-6 rounded-md shadow-md w-full ">
       <h2 className="text-2xl font-bold mb-6">
         Daftar Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
       </h2>
-      <div className="w-full overflow-x-auto">
+      <div className="2xl:w-full xl:w-full lg:w-full w-[300px] overflow-x-scroll">
         <table className="min-w-full table-auto text-left border">
           <thead>
             <tr className="bg-gray-100">
@@ -153,7 +153,7 @@ const ArticleTable = () => {
                 { label: "Kategori", key: "category" },
                 { label: "Tanggal", key: "date" },
                 { label: "Status", key: "status" },
-                { label: "Approved/Rejected By", key: "approved_by" },
+                // { label: "Approved/Rejected By", key: "approved_by" },
                 { label: "Aksi", key: "action" },
               ].map(({ label, key }) => (
                 <th
@@ -196,9 +196,9 @@ const ArticleTable = () => {
                 >
                   {article.status}
                 </td>
-                <td className="border px-4 py-2 whitespace-nowrap">
+                {/* <td className="border px-4 py-2 whitespace-nowrap">
                   {article.approved_by || "-"}
-                </td>
+                </td> */}
                 <td className="border px-4 py-2 whitespace-nowrap">
                   <div className="flex gap-2 justify-center">
                     <button

@@ -196,7 +196,7 @@ const ArticlePublishTable = () => {
         </thead>
         <tbody>
           {sortedArticles.map((article) => (
-            <tr key={article.article_id} className="hover:bg-gray-50">
+            <tr key={article.article_id} className="hover:bg-gray-50 ">
               <td className="border-b p-4">
                 <button
                   className="text-green-500 hover:text-green-700"

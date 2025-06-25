@@ -17,7 +17,7 @@ const MoreModal = ({
   onApply,
   isApplyEnabled,
 }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 2xl:p-0 xl:p-0 lg:p-0 p-4">
     <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-xl">
       <div className="flex gap-4 border-b mb-4 pb-2">
         {["filter", "compare"].map((tab) => (

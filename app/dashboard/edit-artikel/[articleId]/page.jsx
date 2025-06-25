@@ -261,7 +261,7 @@ const EditArtikelPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-10">
+      <div className="grid 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2  grid-rows-1 gap-10">
         <div>
           <label className="block mb-2 font-semibold">
             🖼️ Gambar Thumbnail

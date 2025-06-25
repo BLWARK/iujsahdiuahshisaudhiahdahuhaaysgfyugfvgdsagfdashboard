@@ -48,7 +48,7 @@ const KelolaArtikel = () => {
 
   return (
     <div className="p-6 space-y-6 w-full">
-    <h1 className="2xl:text-3xl xl:text-3xl lg:text-3xl text-xs  font-bold mb-4">
+    <h1 className="2xl:text-3xl xl:text-3xl lg:text-3xl text-xl  font-bold mb-4">
       Kelola Artikel 
     </h1>
 

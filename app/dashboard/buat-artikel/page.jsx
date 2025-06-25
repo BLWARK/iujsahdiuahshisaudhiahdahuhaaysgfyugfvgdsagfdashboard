@@ -285,7 +285,7 @@ const TambahArtikel = () => {
         </div>
       </div>
       {/* ✅ FORM GAMBAR */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 grid-rows-1  gap-4">
         <div className="border max-w-1/2 border-gray-300 rounded-md p-4">
           <h2 className="text-xl font-semibold mb-4">🖼️ Gambar Thumbnail</h2>
           <div

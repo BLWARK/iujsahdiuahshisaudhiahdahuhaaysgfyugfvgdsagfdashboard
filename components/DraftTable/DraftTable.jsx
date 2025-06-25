@@ -122,7 +122,7 @@ const DraftTable = () => {
   return (
     <div className="bg-white p-6 rounded-md shadow-md w-full overflow-x-auto">
       <h2 className="text-2xl font-bold mb-6">Draft Artikel Saya</h2>
-      <div className="w-full overflow-x-auto">
+      <div className="2xl:w-full xl:w-full lg:w-full w-[300px] overflow-x-scroll">
         <table className="min-w-full table-auto text-left border">
           <thead>
             <tr className="bg-gray-100">
