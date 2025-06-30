@@ -74,14 +74,14 @@ const ArticleCategoryOverview = ({
         <table className="min-w-full text-sm text-left text-gray-700">
           <thead className="sticky top-0 bg-white border-b font-medium text-gray-900 z-10">
             <tr>
-              <th className="py-2 px-3">No</th>
-              <th className="py-2 px-3">Judul Artikel</th>
-              <th className="py-2 px-3">Author</th>
-              <th className="py-2 px-3">Kategori</th>
-              <th className="py-2 px-3">Views</th>
-              {isCompareActiveFinal && <th className="py-2 px-3">% Change</th>}
+              <th className="py-2 px-3 2xl:text-sm xl:text-sm lg:text-xs text-xs">No</th>
+              <th className="py-2 px-3 2xl:text-sm xl:text-sm lg:text-xs text-xs">Judul Artikel</th>
+              <th className="py-2 px-3 2xl:text-sm xl:text-sm lg:text-xs text-xs">Author</th>
+              <th className="py-2 px-3 2xl:text-sm xl:text-sm lg:text-xs text-xs">Kategori</th>
+              <th className="py-2 px-3 2xl:text-sm xl:text-sm lg:text-xs text-xs">Views</th>
+              {isCompareActiveFinal && <th className="py-2 px-3 text-nowrap 2xl:text-sm xl:text-sm lg:text-xs text-xs ">% Change</th>}
 
-              <th className="py-2 px-3 text-right">Total Views</th>
+              <th className="py-2 px-3 text-right text-nowrap 2xl:text-sm xl:text-sm lg:text-xs text-xs">Total Views</th>
             </tr>
           </thead>
           <tbody>
