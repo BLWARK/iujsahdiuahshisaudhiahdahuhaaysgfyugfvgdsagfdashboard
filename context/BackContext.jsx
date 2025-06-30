@@ -36,7 +36,6 @@ export const BackProvider = ({ children }) => {
   const [weeklyProgress, setWeeklyProgress] = useState([]);
   const [isLoadingChart, setIsLoadingChart] = useState(false);
 
-
   const [articleData, setArticleData] = useState({
     platform_id: null,
     title: "",
@@ -99,7 +98,6 @@ export const BackProvider = ({ children }) => {
       if (platformId) {
         console.log("🔄 Memuat artikel berdasarkan platform_id:", platformId);
         setSelectedPortal(storedPortal || storedPlatforms[0]);
-        
       } else {
         console.warn("⚠️ Tidak ada portal yang dipilih. Redirect ke login...");
         router.push("/select-portal");
@@ -297,71 +295,73 @@ export const BackProvider = ({ children }) => {
 
   // ✅ Fungsi untuk submit artikel dengan upload gambar dan update
   const submitArticle = async () => {
-  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-  const userId = user?.user_id || storedUser?.user_id || null;
-  const userRole = storedUser?.role?.toLowerCase() || "contributor";
-  const platformId = selectedPortal?.platform_id;
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const userId = user?.user_id || storedUser?.user_id || null;
+    const userRole = storedUser?.role?.toLowerCase() || "contributor";
+    const platformId = selectedPortal?.platform_id;
 
-  if (!platformId || !userId) {
-    alert(
-      "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
-    );
-    return;
-  }
+    if (!platformId || !userId) {
+      alert(
+        "❗ Pastikan Anda telah memilih portal dan login sebelum mengirim artikel."
+      );
+      return;
+    }
 
-  const platformIdInt = parseInt(platformId, 10);
-  if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
-    alert("❌ Platform ID tidak valid.");
-    return;
-  }
+    const platformIdInt = parseInt(platformId, 10);
+    if (!Number.isInteger(platformIdInt) || platformIdInt <= 0) {
+      alert("❌ Platform ID tidak valid.");
+      return;
+    }
 
-  const { imageFile, ...articleWithoutImage } = articleData || {};
-  let imageUrl = null;
+    const { imageFile, ...articleWithoutImage } = articleData || {};
+    let imageUrl = null;
 
-  if (imageFile) {
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImage(imageFile);
+      } catch (error) {
+        console.error("❌ Gagal mengupload gambar:", error);
+        throw new Error("Upload gambar gagal"); // ⬅️ WAJIB agar keluar dari fungsi
+      }
+    }
+
     try {
-      imageUrl = await uploadImage(imageFile);
+      const payload = {
+        ...articleWithoutImage,
+        author_id: userId,
+        platform_id: platformIdInt,
+        image: imageUrl || "",
+        status:
+          userRole === "editor" || userRole === "master"
+            ? "publish"
+            : "pending",
+        description: articleWithoutImage.description || "",
+        tags: Array.isArray(articleWithoutImage.tags)
+          ? articleWithoutImage.tags.map((tag) =>
+              tag.trim().toLowerCase().replace(/\s+/g, "-")
+            )
+          : typeof articleWithoutImage.tags === "string"
+          ? articleWithoutImage.tags
+              .split(",")
+              .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
+          : [],
+      };
+
+      const response = await customPost("/api/articles", payload);
+      const articleId = response?.article_id || response?._id;
+
+      if (!articleId) {
+        throw new Error("Gagal mendapatkan article_id dari response.");
+      }
+
+      console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
+      return articleId;
     } catch (error) {
-      console.error("❌ Gagal mengupload gambar:", error);
-      throw new Error("Upload gambar gagal"); // ⬅️ WAJIB agar keluar dari fungsi
+      console.error("❌ Error submitting article:", error);
+      alert("❌ Gagal mengirim artikel. Silakan periksa kembali data Anda.");
+      throw error;
     }
-  }
-
-  try {
-    const payload = {
-      ...articleWithoutImage,
-      author_id: userId,
-      platform_id: platformIdInt,
-      image: imageUrl || "",
-      status: (userRole === "editor" || userRole === "master") ? "publish" : "pending",
-      description: articleWithoutImage.description || "",
-      tags: Array.isArray(articleWithoutImage.tags)
-        ? articleWithoutImage.tags.map((tag) =>
-            tag.trim().toLowerCase().replace(/\s+/g, "-")
-          )
-        : typeof articleWithoutImage.tags === "string"
-        ? articleWithoutImage.tags
-            .split(",")
-            .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
-        : [],
-    };
-
-    const response = await customPost("/api/articles", payload);
-    const articleId = response?.article_id || response?._id;
-
-    if (!articleId) {
-      throw new Error("Gagal mendapatkan article_id dari response.");
-    }
-
-    console.log("✅ Artikel berhasil dikirim dengan ID:", articleId);
-    return articleId;
-  } catch (error) {
-    console.error("❌ Error submitting article:", error);
-    alert("❌ Gagal mengirim artikel. Silakan periksa kembali data Anda.");
-    throw error;
-  }
-};
-
+  };
 
   const saveHeadlines = async (headlines, headlineCategory = "HOME") => {
     if (!selectedPortal?.platform_id) {
@@ -550,24 +550,22 @@ export const BackProvider = ({ children }) => {
   };
 
   const getAuthorArticles = useCallback(
-  async (page = 1, sortBy = "date", sortOrder = "desc") => {
-    if (!selectedPortal?.platform_id || !user?.user_id) return;
+    async (page = 1, sortBy = "date", sortOrder = "desc") => {
+      if (!selectedPortal?.platform_id || !user?.user_id) return;
 
-    try {
-      const response = await customGet(
-        `/api/articles?platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=${page}&limit=15&status=all&sortBy=${sortBy}&sortOrder=${sortOrder}`
-      );
+      try {
+        const response = await customGet(
+          `/api/articles?platform_id=${selectedPortal.platform_id}&author_id=${user.user_id}&page=${page}&limit=15&status=all&sortBy=${sortBy}&sortOrder=${sortOrder}`
+        );
 
-      setArticles(response?.data || []);
-      setAuthorArticlesMeta(response?.meta || {}); // ✅ tambahkan ini
-    } catch (error) {
-      console.error("❌ Error fetching author articles:", error);
-    }
-  },
-  [selectedPortal?.platform_id, user?.user_id]
-);
-
-
+        setArticles(response?.data || []);
+        setAuthorArticlesMeta(response?.meta || {}); // ✅ tambahkan ini
+      } catch (error) {
+        console.error("❌ Error fetching author articles:", error);
+      }
+    },
+    [selectedPortal?.platform_id, user?.user_id]
+  );
 
   // ✅ Fungsi untuk mengambil kategori berdasarkan platform_id
   const getCategoriesByPlatformId = async (platformId) => {
@@ -640,58 +638,57 @@ export const BackProvider = ({ children }) => {
   };
 
   const submitEditedArticle = async (articleId, articleData) => {
-  if (!articleId) {
-    alert("❗ ID artikel tidak valid.");
-    return;
-  }
-
-  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-  const userRole = storedUser?.role?.toLowerCase() || "contributor";
-
-
-  const {
-    imageFile,
-    author,
-    created_at,
-    updated_at,
-    ...articleWithoutImage
-  } = articleData || {};
-
-  let imageUrl = null;
-  if (imageFile) {
-    try {
-      imageUrl = await uploadImage(imageFile);
-    } catch (error) {
-      console.error("❌ Gagal upload gambar:", error);
-      throw new Error("Gagal upload gambar");
+    if (!articleId) {
+      alert("❗ ID artikel tidak valid.");
+      return;
     }
-  }
 
-  const payload = {
-    ...articleWithoutImage,
-    image: imageUrl || articleData.image || "",
-    status: (userRole === "editor" || userRole === "master") ? "publish" : "pending",
-    tags: Array.isArray(articleWithoutImage.tags)
-      ? articleWithoutImage.tags.map((tag) =>
-          tag.trim().toLowerCase().replace(/\s+/g, "-")
-        )
-      : typeof articleWithoutImage.tags === "string"
-      ? articleWithoutImage.tags
-          .split(",")
-          .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
-      : [],
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const userRole = storedUser?.role?.toLowerCase() || "contributor";
+
+    const {
+      imageFile,
+      author,
+      created_at,
+      updated_at,
+      ...articleWithoutImage
+    } = articleData || {};
+
+    let imageUrl = null;
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImage(imageFile);
+      } catch (error) {
+        console.error("❌ Gagal upload gambar:", error);
+        throw new Error("Gagal upload gambar");
+      }
+    }
+
+    const payload = {
+      ...articleWithoutImage,
+      image: imageUrl || articleData.image || "",
+      status:
+        userRole === "editor" || userRole === "master" ? "publish" : "pending",
+      tags: Array.isArray(articleWithoutImage.tags)
+        ? articleWithoutImage.tags.map((tag) =>
+            tag.trim().toLowerCase().replace(/\s+/g, "-")
+          )
+        : typeof articleWithoutImage.tags === "string"
+        ? articleWithoutImage.tags
+            .split(",")
+            .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
+        : [],
+    };
+
+    try {
+      const response = await customPut(`/api/articles/${articleId}`, payload);
+      console.log("✅ Artikel berhasil diperbarui:", response);
+      return response;
+    } catch (error) {
+      console.error("❌ Gagal update artikel:", error);
+      throw error;
+    }
   };
-
-  try {
-    const response = await customPut(`/api/articles/${articleId}`, payload);
-    console.log("✅ Artikel berhasil diperbarui:", response);
-    return response;
-  } catch (error) {
-    console.error("❌ Gagal update artikel:", error);
-    throw error;
-  }
-};
-
 
   const deleteArticleById = async (articleId) => {
     if (!articleId) throw new Error("ID artikel tidak valid");
@@ -707,28 +704,30 @@ export const BackProvider = ({ children }) => {
   };
 
   const markArticleAsDeleted = async (articleId) => {
-  if (!articleId) throw new Error("ID artikel tidak valid");
+    if (!articleId) throw new Error("ID artikel tidak valid");
 
-  try {
-    const response = await customPut(`/api/articles/${articleId}`, {
-      status: "deleted",
-    });
-    console.log("📝 Artikel ditandai sebagai deleted:", response);
-    return response;
-  } catch (error) {
-    console.error("❌ Gagal mengubah status artikel:", error);
-    throw error;
-  }
+    try {
+      const response = await customPut(`/api/articles/${articleId}`, {
+        status: "deleted",
+      });
+      console.log("📝 Artikel ditandai sebagai deleted:", response);
+      return response;
+    } catch (error) {
+      console.error("❌ Gagal mengubah status artikel:", error);
+      throw error;
+    }
   };
 
   const getDeletedArticles = async (platformId) => {
-  try {
-    const response = await customGet(`/api/articles?platform_id=${platformId}&status=deleted`);
-    return response.data || [];
-  } catch (error) {
-    console.error("❌ Gagal mengambil artikel deleted:", error);
-    return [];
-  }
+    try {
+      const response = await customGet(
+        `/api/articles?platform_id=${platformId}&status=deleted`
+      );
+      return response.data || [];
+    } catch (error) {
+      console.error("❌ Gagal mengambil artikel deleted:", error);
+      return [];
+    }
   };
 
   const uploadArticleImage = async (file) => {
@@ -753,38 +752,35 @@ export const BackProvider = ({ children }) => {
   };
 
   // Fungsi untuk upload gambar
-const uploadImage = async (imageFile) => {
-  try {
-    const formData = new FormData();
-    formData.append("image", imageFile);
+  const uploadImage = async (imageFile) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
 
-    const response = await customPost("/api/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+      const response = await customPost("/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    let imageUrl = response?.data?.url || response?.url || null;
+      let imageUrl = response?.data?.url || response?.url || null;
 
-    if (imageUrl?.includes("156.67.217.169")) {
-      imageUrl = imageUrl
-        .replace("http://156.67.217.169:9001", "https://storage.xyzone.media")
-        .replace("http://", "https://"); // pastikan https
+      if (imageUrl?.includes("156.67.217.169")) {
+        imageUrl = imageUrl
+          .replace("http://156.67.217.169:9001", "https://storage.xyzone.media")
+          .replace("http://", "https://"); // pastikan https
+      }
+
+      if (!imageUrl) {
+        throw new Error("Gagal mendapatkan URL gambar.");
+      }
+
+      return imageUrl;
+    } catch (error) {
+      console.error("❌ Gagal upload gambar:", error);
+      throw new Error("Upload gagal");
     }
-
-    if (!imageUrl) {
-      throw new Error("Gagal mendapatkan URL gambar.");
-    }
-
-    return imageUrl;
-  } catch (error) {
-    console.error("❌ Gagal upload gambar:", error);
-    throw new Error("Upload gagal");
-  }
-};
-
-
-
+  };
 
   // Fungsi untuk approve artikel
   const approveArticle = async (articleId) => {
@@ -1074,15 +1070,17 @@ const uploadImage = async (imageFile) => {
 
   const searchArticles = useCallback(async (query, platformId) => {
     if (!query) return [];
-  
+
     const finalPlatformId =
       platformId ||
       JSON.parse(localStorage.getItem("selectedPortal") || "{}")?.platform_id ||
       1;
-  
+
     try {
       const response = await customGet(
-        `/api/articles?search=${encodeURIComponent(query)}&platform_id=${finalPlatformId}`
+        `/api/articles?search=${encodeURIComponent(
+          query
+        )}&platform_id=${finalPlatformId}`
       );
       return response?.data || [];
     } catch (error) {
@@ -1091,69 +1089,60 @@ const uploadImage = async (imageFile) => {
     }
   }, []);
 
+  const getDailyChart = async () => {
+    try {
+      setIsLoadingChart(true);
 
-const getDailyChart = async () => {
-  try {
-    setIsLoadingChart(true);
+      const url = `/api/analytics/chart/daily`;
+      const res = await customGet(url);
+      const data = res?.data;
 
-    const url = `/api/analytics/chart/daily`;
-    const res = await customGet(url);
-    const data = res?.data;
+      console.log("🔥 setDailyChart (default):", data);
+      setDailyChart(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("❌ Gagal ambil daily chart:", err);
+      setDailyChart([]);
+    } finally {
+      setIsLoadingChart(false);
+    }
+  };
 
-    console.log("🔥 setDailyChart (default):", data);
-    setDailyChart(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("❌ Gagal ambil daily chart:", err);
-    setDailyChart([]);
-  } finally {
-    setIsLoadingChart(false);
-  }
-};
+  const getDailyChartByDateRange = async (startDate, endDate) => {
+    try {
+      setIsLoadingChart(true);
+      const url = `/api/analytics/chart/date-range?date_from=${startDate}&date_to=${endDate}`;
+      const res = await customGet(url);
+      const raw = res?.data;
 
+      const adapted = raw?.chartData?.map((item) => ({
+        date: item.date, // 🔁 pakai item.date sesuai struktur response kamu
+        totalVisitors: item.totalVisitors,
+        uniqueVisitors: item.uniqueVisitors,
+        duration: item.duration,
+      }));
 
-const getDailyChartByDateRange = async (startDate, endDate) => {
-  try {
-    setIsLoadingChart(true);
-    const url = `/api/analytics/chart/date-range?date_from=${startDate}&date_to=${endDate}`;
-    const res = await customGet(url);
-    const raw = res?.data;
+      console.log("🔥 Adapted chartData:", adapted);
 
-    const adapted = raw?.chartData?.map((item) => ({
-      date: item.date, // 🔁 pakai item.date sesuai struktur response kamu
-      totalVisitors: item.totalVisitors,
-      uniqueVisitors: item.uniqueVisitors,
-      duration: item.duration,
-    }));
+      setDailyChart(Array.isArray(adapted) ? adapted : []);
+      return adapted; // ✅ tambahkan ini agar bisa digunakan di handleApply
+    } catch (err) {
+      console.error("❌ Gagal ambil chart:", err);
+      setDailyChart([]);
+      return [];
+    } finally {
+      setIsLoadingChart(false);
+    }
+  };
 
-    console.log("🔥 Adapted chartData:", adapted);
-
-    setDailyChart(Array.isArray(adapted) ? adapted : []);
-    return adapted; // ✅ tambahkan ini agar bisa digunakan di handleApply
-  } catch (err) {
-    console.error("❌ Gagal ambil chart:", err);
-    setDailyChart([]);
-    return [];
-  } finally {
-    setIsLoadingChart(false);
-  }
-};
-
-
-
-
-
-
-
-const getWeeklyChart = async () => {
-  try {
-    const res = await customGet("/api/analytics/chart/weekly");
-    setWeeklyChart(res?.data || []);
-  } catch (err) {
-    console.error("Failed to fetch weekly chart:", err);
-    setWeeklyChart([]);
-  }
-};
-
+  const getWeeklyChart = async () => {
+    try {
+      const res = await customGet("/api/analytics/chart/weekly");
+      setWeeklyChart(res?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch weekly chart:", err);
+      setWeeklyChart([]);
+    }
+  };
 
   const getMonthlyChart = async () => {
     try {
@@ -1174,60 +1163,119 @@ const getWeeklyChart = async () => {
   };
 
   useEffect(() => {
-  if (selectedPortal?.platform_id) {
-    getDailyChart(selectedPortal.platform_id);
-    getWeeklyChart(selectedPortal.platform_id);
-    getMonthlyChart(selectedPortal.platform_id);
-    getWeeklyProgress(selectedPortal.platform_id);
-  }
-}, [selectedPortal]);
+    if (selectedPortal?.platform_id) {
+      getDailyChart(selectedPortal.platform_id);
+      getWeeklyChart(selectedPortal.platform_id);
+      getMonthlyChart(selectedPortal.platform_id);
+      getWeeklyProgress(selectedPortal.platform_id);
+    }
+  }, [selectedPortal]);
 
-const getUserArticleCount = async () => {
+  const getUserArticleCount = async () => {
+    try {
+      const res = await customGet("/api/analytics/users/article-count");
+      return res.data?.users || []; // ✅ ambil dari res.data.users
+    } catch (err) {
+      console.error("❌ Gagal ambil artikel per user:", err);
+      return [];
+    }
+  };
+
+  const getReferrerSourcesByRange = async (dateFrom, dateTo) => {
+    try {
+      const res = await customGet(
+        `/api/analytics/referrers/sources?limit=50&order_by=referrer_count&order_direction=desc&date_from=${dateFrom}&date_to=${dateTo}&group_by=domain`
+      );
+      return res?.data;
+    } catch (error) {
+      console.error("Failed to fetch referrer sources", error);
+      return null;
+    }
+  };
+
+  const getReferrerComparisonSources = async (
+    dateFrom,
+    dateTo,
+    compareFrom,
+    compareTo
+  ) => {
+    try {
+      const [mainRes, compareRes] = await Promise.all([
+        getReferrerSourcesByRange(dateFrom, dateTo),
+        getReferrerSourcesByRange(compareFrom, compareTo),
+      ]);
+
+      return {
+        main: mainRes?.referrers || [],
+        compare: compareRes?.referrers || [],
+      };
+    } catch (err) {
+      console.error("❌ Gagal fetch referrer comparison sources:", err);
+      return { main: [], compare: [] };
+    }
+  };
+
+  const getTopCategoriesByRange = async (dateFrom, dateTo) => {
+    try {
+      const res = await customGet(
+        `/api/analytics/categories/views?date_from=${dateFrom}&date_to=${dateTo}&order_by=category_name&order_direction=asc`
+      );
+      return res?.data || null;
+    } catch (error) {
+      console.error("❌ Gagal fetch top categories", error);
+      return null;
+    }
+  };
+
+  const getTopCategoriesComparison = async (
+    dateFrom,
+    dateTo,
+    compareFrom,
+    compareTo
+  ) => {
+    try {
+      const [mainRes, compareRes] = await Promise.all([
+        getTopCategoriesByRange(dateFrom, dateTo),
+        getTopCategoriesByRange(compareFrom, compareTo),
+      ]);
+
+      return {
+        main: mainRes?.categories || [],
+        compare: compareRes?.categories || [],
+      };
+    } catch (err) {
+      console.error("❌ Gagal fetch kategori comparison:", err);
+      return { main: [], compare: [] };
+    }
+  };
+
+
+ const getArticlesByCategoryRange = async (dateFrom, dateTo) => {
   try {
-    const res = await customGet("/api/analytics/users/article-count");
-    return res.data?.users || []; // ✅ ambil dari res.data.users
+    const res = await customGet(
+      `/api/analytics/articles/views?date_from=${dateFrom}&date_to=${dateTo}&order_by=category_name&order_direction=desc`
+    );
+    return res?.data || [];
   } catch (err) {
-    console.error("❌ Gagal ambil artikel per user:", err);
+    console.error("❌ Gagal fetch artikel per kategori:", err);
     return [];
   }
 };
 
-const getReferrerSourcesByRange = async (dateFrom, dateTo) => {
+const getArticlesCategoryComparison = async (dateFrom, dateTo, compareFrom, compareTo) => {
   try {
-    const res = await customGet(
-      `/api/analytics/referrers/sources?limit=50&order_by=referrer_count&order_direction=desc&date_from=${dateFrom}&date_to=${dateTo}&group_by=domain`
-    );
-    return res?.data;
-  } catch (error) {
-    console.error("Failed to fetch referrer sources", error);
-    return null;
-  }
-};
-
-
-const getReferrerComparisonSources = async (dateFrom, dateTo, compareFrom, compareTo) => {
-  try {
-    const [mainRes, compareRes] = await Promise.all([
-      getReferrerSourcesByRange(dateFrom, dateTo),
-      getReferrerSourcesByRange(compareFrom, compareTo),
+    const [main, compare] = await Promise.all([
+      getArticlesByCategoryRange(dateFrom, dateTo),
+      getArticlesByCategoryRange(compareFrom, compareTo),
     ]);
-
-    return {
-      main: mainRes?.referrers || [],
-      compare: compareRes?.referrers || [],
-    };
+    return { main, compare };
   } catch (err) {
-    console.error("❌ Gagal fetch referrer comparison sources:", err);
+    console.error("❌ Gagal fetch perbandingan artikel kategori:", err);
     return { main: [], compare: [] };
   }
 };
 
 
-
-
-
-  
-  
 
   // ✅ Fungsi Logout
   const logout = () => {
@@ -1303,20 +1351,23 @@ const getReferrerComparisonSources = async (dateFrom, dateTo, compareFrom, compa
       markArticleAsDeleted,
       getDeletedArticles,
       authorArticlesMeta,
-       dailyChart,
-        weeklyChart,
-        monthlyChart,
-        weeklyProgress,
-        getDailyChart,
-        getWeeklyChart,
-        getMonthlyChart,
-        getWeeklyProgress,
-        getDailyChartByDateRange,
-        getUserArticleCount,
-         setDailyChart,
-         getReferrerSourcesByRange,
-         getReferrerComparisonSources,
-
+      dailyChart,
+      weeklyChart,
+      monthlyChart,
+      weeklyProgress,
+      getDailyChart,
+      getWeeklyChart,
+      getMonthlyChart,
+      getWeeklyProgress,
+      getDailyChartByDateRange,
+      getUserArticleCount,
+      setDailyChart,
+      getReferrerSourcesByRange,
+      getReferrerComparisonSources,
+      getTopCategoriesByRange,
+      getTopCategoriesComparison,
+      getArticlesByCategoryRange,
+      getArticlesCategoryComparison,
     }),
     [
       user,
@@ -1327,11 +1378,9 @@ const getReferrerComparisonSources = async (dateFrom, dateTo, compareFrom, compa
       articles,
       selectedPortal,
       isSuccessPopup,
-      dailyChart,   
-      weeklyChart,     // ✅ tambahkan ini
+      dailyChart,
+      weeklyChart, // ✅ tambahkan ini
       isLoadingChart,
-      
-      
     ]
   );
 

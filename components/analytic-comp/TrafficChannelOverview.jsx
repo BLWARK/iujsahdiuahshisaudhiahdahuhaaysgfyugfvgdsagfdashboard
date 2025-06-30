@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 
+// Warna per channel
 const CHANNEL_COLOR_MAP = {
   Direct: "#1E40AF",
   Organic: "#F97316",
@@ -23,36 +24,21 @@ const CHANNEL_COLOR_MAP = {
   Other: "#9CA3AF",
 };
 
+// Mapping referrer name ke channel
 const getChannelName = (referrerName) => {
   if (!referrerName || typeof referrerName !== "string") return "Other";
-
   const name = referrerName.toLowerCase();
+
   if (referrerName === "Direct Traffic") return "Direct";
- if (
-    name.includes("google.com") ||
-    
-    
-  
-    name.includes("chatgpt.com") ||
-    name.includes("brave")
-  ) return "Organic";
+  if (name.includes("google.com") || name.includes("chatgpt.com") || name.includes("brave")) return "Organic";
   if (name.includes("facebook") || name.includes("whatsapp")) return "Social";
-
-  if (
-    name.includes("linktr.ee") ||
-    name.includes("threads") ||
-    name.includes("xyzonemedia")
-  )
-    return "Referrals";
-
-
+  if (name.includes("linktr.ee") || name.includes("threads") || name.includes("xyzonemedia")) return "Referrals";
   if (name.includes("email")) return "Email";
   if (name.includes("display")) return "Display";
-
   return "Other";
 };
 
-
+// Group data referrer jadi channel
 const buildChannelData = (referrers) => {
   const grouped = {};
   referrers.forEach((item) => {
@@ -70,9 +56,35 @@ const buildChannelData = (referrers) => {
   }));
 };
 
+// 🔧 Custom tooltip
+const CustomTooltip = ({ active, payload, label, dateFrom, dateTo, compareFrom, compareTo }) => {
+  if (!active || !payload || !payload.length) return null;
+
+  return (
+    <div className="bg-white border shadow p-2 text-sm rounded">
+      <div className="font-semibold mb-1">{label}</div>
+      {payload.map((entry, index) => {
+        const isCurrent = entry.dataKey === "current";
+        const dateRange = isCurrent
+          ? `${dayjs(dateFrom).format("DD MMM")} – ${dayjs(dateTo).format("DD MMM YYYY")}`
+          : `${dayjs(compareFrom).format("DD MMM")} – ${dayjs(compareTo).format("DD MMM YYYY")}`;
+
+        return (
+          <div key={index} style={{ color: entry.color }}>
+            {isCurrent ? "Current" : "Comparison"} ({dateRange}):{" "}
+            {entry.value.toLocaleString()} visits
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const TrafficChannelOverview = ({
   dateFrom,
   dateTo,
+  compareFrom,
+  compareTo,
   compareChartData = [],
   isCompareMode = false,
 }) => {
@@ -91,7 +103,7 @@ const TrafficChannelOverview = ({
         compareData = buildChannelData(compareChartData);
       }
 
-      // Merge by channel
+      // Gabung data per channel
       const allChannels = [
         ...new Set([...mainData.map((d) => d.name), ...compareData.map((d) => d.name)]),
       ];
@@ -127,7 +139,7 @@ const TrafficChannelOverview = ({
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md mt-6">
-      <h3 className="text-lg font-bold text-gray-800 mb-1">Channel Distribution</h3>
+      <h3 className="text-lg font-bold text-gray-800 mb-1">Traffic Source</h3>
       <div className="text-sm text-gray-500 mb-4">{getLabelText()}</div>
       <div style={{ width: "100%", height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -135,7 +147,14 @@ const TrafficChannelOverview = ({
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip
-              formatter={(val, name) => [`${val} visits`, name === "current" ? "Current" : "Comparison"]}
+              content={
+                <CustomTooltip
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  compareFrom={compareFrom}
+                  compareTo={compareTo}
+                />
+              }
             />
             <Bar dataKey="current" name="Current" fill="#2563eb">
               <LabelList dataKey="currentPercent" position="top" formatter={(val) => `${val}%`} />
