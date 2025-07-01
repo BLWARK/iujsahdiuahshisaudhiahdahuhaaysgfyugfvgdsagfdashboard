@@ -12,36 +12,29 @@ const ArticlePopup = ({
   filterPlatformId,
   setFilterPlatformId,
 }) => {
-
-  // ✅ State langsung ambil dari props.meta (gunakan nilai default jika kosong)
   const [currentPage, setCurrentPage] = useState(meta?.page || 1);
   const [totalPages, setTotalPages] = useState(meta?.totalPages || 1);
 
-  console.log("🔥 PROPS META: ", meta);
-
-  // ✅ Update state currentPage & totalPages jika props.meta berubah
   useEffect(() => {
     if (meta?.page && meta?.totalPages) {
-      console.log("✅ Updating meta data:", meta);
       setCurrentPage(meta.page);
       setTotalPages(meta.totalPages);
     }
-  }, [meta]); // ✅ Pantau perubahan meta
+  }, [meta]);
 
-  // ✅ Fungsi untuk mengganti halaman → Trigger parent component untuk ambil data baru
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       const nextPage = currentPage + 1;
-      setCurrentPage(nextPage); // ✅ Update state lokal
-      onPageChange(nextPage); // ✅ Trigger ke parent
+      setCurrentPage(nextPage);
+      onPageChange(nextPage);
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
       const prevPage = currentPage - 1;
-      setCurrentPage(prevPage); // ✅ Update state lokal
-      onPageChange(prevPage); // ✅ Trigger ke parent
+      setCurrentPage(prevPage);
+      onPageChange(prevPage);
     }
   };
 
@@ -50,7 +43,6 @@ const ArticlePopup = ({
       <div className="bg-white p-6 rounded-lg shadow-md w-1/2 max-h-[90vh] overflow-auto relative">
         <h2 className="text-lg font-bold mb-4">Ganti Artikel</h2>
 
-        {/* ✅ Tombol Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-700 hover:text-gray-900"
@@ -58,31 +50,28 @@ const ArticlePopup = ({
           <IoClose size={24} />
         </button>
 
-        {/* 🔄 TOMBOL PILIH PLATFORM DALAM POPUP */}
-<div className="flex flex-wrap gap-2 mb-4">
-  {regionalPortals.map((portal) => (
-    <button
-      key={portal.platform_id}
-      onClick={() => {
-        setFilterPlatformId(portal.platform_id);
-        onPageChange(1); // reset ke page 1
-      }}
-      className={`px-3 py-4 rounded-lg border text-sm ${
-        filterPlatformId === portal.platform_id
-          ? "bg-pink-600 text-white"
-          : "bg-white text-gray-800 hover:bg-gray-100"
-      }`}
-    >
-      {portal.platform_desc}
-    </button>
-  ))}
-</div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {regionalPortals.map((portal) => (
+            <button
+              key={portal.platform_id}
+              onClick={() => {
+                setFilterPlatformId(portal.platform_id);
+                onPageChange(1);
+              }}
+              className={`px-3 py-4 rounded-lg border text-sm ${
+                filterPlatformId === portal.platform_id
+                  ? "bg-pink-600 text-white"
+                  : "bg-white text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              {portal.platform_desc}
+            </button>
+          ))}
+        </div>
 
-<div className="w-full h-[1px] bg-gray-200 my-5"></div>
-<h2 className="text-xl font-bold mb-4">
-          ✨ Daftar Artikel 
-        </h2>
-        {/* ✅ Daftar Artikel */}
+        <div className="w-full h-[1px] bg-gray-200 my-5"></div>
+        <h2 className="text-xl font-bold mb-4">✨ Daftar Artikel</h2>
+
         {articles.length === 0 ? (
           <p className="text-center text-gray-500">Tidak ada artikel...</p>
         ) : (
@@ -104,7 +93,6 @@ const ArticlePopup = ({
           </ul>
         )}
 
-        {/* ✅ Kontrol Pagination */}
         <div className="flex justify-between items-center mt-4">
           <button
             onClick={handlePrevPage}

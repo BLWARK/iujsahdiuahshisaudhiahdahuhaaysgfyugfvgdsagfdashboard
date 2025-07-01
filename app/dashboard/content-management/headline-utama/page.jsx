@@ -13,38 +13,45 @@ import ArticleList from "@/components/ArticleList";
 import NotifHeadEditor from "@/components/NotifHeadEditor";
 import ArticleListSkeleton from "@/components/ArticleListSkeleton";
 
+const allowedIds = [1, 13, 14, 15, 16, 17];
 
 const HeadlinePage = () => {
-  const { selectedPortal, articles, getArticles, saveHeadlines, getHeadlines } =
-    useBackend();
+  const {
+    selectedPortal,
+    articles,
+    getArticles,
+    saveHeadlines,
+    getHeadlines,
+    platforms,
+  } = useBackend();
+
+  const regionalPortals = platforms.filter((p) =>
+    allowedIds.includes(p.platform_id)
+  );
 
   const [headlines, setHeadlines] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [currentReplaceIndex, setCurrentReplaceIndex] = useState(null);
   const [notification, setNotification] = useState(null);
-
-  // ✅ State loading terpisah
   const [isLoadingHeadlines, setIsLoadingHeadlines] = useState(true);
   const [isLoadingArticles, setIsLoadingArticles] = useState(true);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [meta, setMeta] = useState(null);
+  const [filterPlatformId, setFilterPlatformId] = useState(1);
 
   const articlesPerPage = 10;
   const hasFetched = useRef(false);
 
-  // ✅ Fetch Headline hanya saat platform_id berubah (TIDAK TERPENGARUH Pagination)
   useEffect(() => {
-    const fetchHeadlines = async () => {
-      if (!selectedPortal?.platform_id || hasFetched.current) return;
+  const fetchHeadlines = async () => {
+    if (!selectedPortal?.platform_id) return;
 
-      setIsLoadingHeadlines(true);
+    setIsLoadingHeadlines(true);
 
-      try {
-        console.log("✅ Fetching headlines...");
-        const headlineData = await getHeadlines(selectedPortal.platform_id);
-
-        const mappedHeadlines = headlineData.map((item) => ({
+    try {
+      const headlineData = await getHeadlines(selectedPortal.platform_id);
+      const mapped = headlineData
+        .map((item) => ({
           position: item.position,
           article_id: item.article?.article_id || item.article_id,
           title: item.article?.title || "No Title",
@@ -55,147 +62,108 @@ const HeadlinePage = () => {
         }))
         .sort((a, b) => a.position - b.position);
 
-        setHeadlines(mappedHeadlines);
-        hasFetched.current = true;
-      } catch (error) {
-        console.error("❌ Error fetching headlines:", error);
-      } finally {
-        setIsLoadingHeadlines(false);
-      }
-    };
+      setHeadlines(mapped);
+    } catch (err) {
+      console.error("Error fetching headlines:", err);
+    } finally {
+      setIsLoadingHeadlines(false);
+    }
+  };
 
-    fetchHeadlines();
-  }, [selectedPortal?.platform_id, getHeadlines]); // ✅ TANPA `currentPage`!
+  fetchHeadlines();
+}, [selectedPortal?.platform_id]);
 
-  // ✅ Fetch Articles hanya saat currentPage berubah (TIDAK TERPENGARUH Kolom Headline)
+
   useEffect(() => {
-    if (!selectedPortal?.platform_id) return;
+    if (!filterPlatformId) return;
 
     const fetchArticles = async () => {
       setIsLoadingArticles(true);
-
       try {
-        console.log("✅ Fetching articles...");
         const response = await getArticles(
-          selectedPortal.platform_id,
+          filterPlatformId,
           currentPage,
           articlesPerPage
         );
-
         setMeta(response?.meta || {});
-      } catch (error) {
-        console.error("❌ Error fetching articles:", error);
+      } catch (err) {
+        console.error("Error fetching articles:", err);
       } finally {
         setIsLoadingArticles(false);
       }
     };
 
     fetchArticles();
-  }, [selectedPortal?.platform_id, currentPage, getArticles]); // ✅ currentPage jadi trigger!
+  }, [filterPlatformId, currentPage]);
 
-  // ✅ Jika platform berubah, reset ref agar fetch bisa dipanggil ulang
   useEffect(() => {
-    if (selectedPortal?.platform_id) {
-      hasFetched.current = false;
-    }
+    hasFetched.current = false;
   }, [selectedPortal?.platform_id]);
 
-  // ✅ Filter artikel berdasarkan selectedPortal.platform_id
   const filteredArticles = articles.filter(
-  (article) =>
-    article.platform_id === selectedPortal?.platform_id &&
-    article.status === "publish" // ✅ hanya status publish
-);
+    (article) =>
+      article.platform_id === filterPlatformId && article.status === "publish"
+  );
 
-
-  // ✅ Sorting berdasarkan tanggal (descending: artikel terbaru di atas)
   const sortedFilteredArticles = [...filteredArticles].sort(
     (a, b) => new Date(b.date) - new Date(a.date)
   );
 
-  // ✅ Fungsi untuk menambahkan artikel ke daftar headlines (maksimal 5)
   const addToHeadlines = (article) => {
-    setHeadlines((prevHeadlines) => {
-      const isAlreadyAdded = prevHeadlines.some(
-        (item) => item.article_id === article.article_id
-      );
-      if (!isAlreadyAdded && prevHeadlines.length < 5) {
-        return [...prevHeadlines, article];
-      }
-      return prevHeadlines;
+    setHeadlines((prev) => {
+      const isAlreadyAdded = prev.some((i) => i.article_id === article.article_id);
+      if (!isAlreadyAdded && prev.length < 5) return [...prev, article];
+      return prev;
     });
   };
 
-  // ✅ Fungsi untuk menghapus headline
   const removeFromHeadlines = (id) => {
-    setHeadlines((prevHeadlines) =>
-      prevHeadlines.filter((item) => item.article_id !== id)
-    );
+    setHeadlines((prev) => prev.filter((item) => item.article_id !== id));
   };
 
-  // ✅ Pindahkan headline ke atas
   const moveUp = (index) => {
     if (index === 0) return;
-    setHeadlines((prevHeadlines) => {
-      const updatedHeadlines = [...prevHeadlines];
-      [updatedHeadlines[index - 1], updatedHeadlines[index]] = [
-        updatedHeadlines[index],
-        updatedHeadlines[index - 1],
-      ];
-      return updatedHeadlines;
+    setHeadlines((prev) => {
+      const updated = [...prev];
+      [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+      return updated;
     });
   };
 
-  // ✅ Pindahkan headline ke bawah
   const moveDown = (index) => {
     if (index === headlines.length - 1) return;
-    setHeadlines((prevHeadlines) => {
-      const updatedHeadlines = [...prevHeadlines];
-      [updatedHeadlines[index], updatedHeadlines[index + 1]] = [
-        updatedHeadlines[index + 1],
-        updatedHeadlines[index],
-      ];
-      return updatedHeadlines;
+    setHeadlines((prev) => {
+      const updated = [...prev];
+      [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+      return updated;
     });
   };
 
-    // ✅ Buka popup ganti headline → FIXED ✅
-    const openReplacePopup = (index) => {
-      setCurrentReplaceIndex(index);
-      setIsPopupOpen(true);
-    };
+  const openReplacePopup = (index) => {
+  setCurrentReplaceIndex(index);
+  setFilterPlatformId(selectedPortal.platform_id); // 🔥 Sync dengan portal aktif
+  setCurrentPage(1); // optional: reset ke halaman pertama
+  setIsPopupOpen(true);
+};
 
-      // ✅ Tutup popup
-  const closeReplacePopup = () => {
-    setIsPopupOpen(false);
-    setCurrentReplaceIndex(null);
-  };
 
-  // ✅ Ganti headline
   const replaceHeadline = (article) => {
-    setHeadlines((prevHeadlines) => {
-      const isDuplicate = prevHeadlines.some(
-        (item) => item.article_id === article.article_id
-      );
-  
+    setHeadlines((prev) => {
+      const isDuplicate = prev.some((i) => i.article_id === article.article_id);
       if (isDuplicate) {
         setNotification({
           type: "error",
-          message: `Artikel "${article.title}" sudah ada di daftar!`,
+          message: `Artikel \"${article.title}\" sudah ada di daftar!`,
         });
-        return prevHeadlines; // ❌ Jangan ubah state jika duplikat
+        return prev;
       }
-  
-      // ✅ Jika tidak duplikat → lanjutkan replace
-      const updatedHeadlines = [...prevHeadlines];
-      updatedHeadlines[currentReplaceIndex] = article;
-      return updatedHeadlines;
+      const updated = [...prev];
+      updated[currentReplaceIndex] = article;
+      return updated;
     });
-  
     setIsPopupOpen(false);
   };
-  
-  // ✅ Simpan headlines ke backend
+
   const handleSaveHeadlines = async () => {
     if (headlines.length === 0) {
       setNotification({
@@ -204,7 +172,6 @@ const HeadlinePage = () => {
       });
       return;
     }
-  
     try {
       await saveHeadlines(headlines);
       setNotification({
@@ -214,35 +181,27 @@ const HeadlinePage = () => {
     } catch (error) {
       setNotification({
         type: "error",
-        message: "❌ Error saat menyimpan headline!",
+        message: "Error saat menyimpan headline!",
       });
     }
   };
-  
 
-    // ✅ Fungsi untuk menutup popup notifikasi dan refresh halaman
-    const handleCloseNotification = () => {
-      setNotification(null);
-      window.location.reload(); // ✅ Refresh halaman setelah menutup popup
-    };
+  const handleCloseNotification = () => {
+    setNotification(null);
+    window.location.reload();
+  };
 
-  // ✅ Pagination
   const totalPages = meta ? meta.totalPages : 1;
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   return (
     <div className="p-6 space-y-8 relative">
-      {/* Headline Artikel */}
       <div className="border p-4 rounded-lg shadow-md bg-white">
         <h2 className="text-xl font-bold mb-4">
-          🏆 Headline Artikel -{" "}
-          {selectedPortal?.platform_name || "Pilih Portal"}
+          🏆 Headline Artikel - {selectedPortal?.platform_name || "Pilih Portal"}
         </h2>
-
         {isLoadingHeadlines ? (
           <ArticleListSkeleton count={4} />
         ) : (
@@ -262,33 +221,20 @@ const HeadlinePage = () => {
                   />
                 </div>
                 <h3 className="mt-2 text-sm font-bold">{headline.title}</h3>
-                {/* Tombol Kontrol */}
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => moveUp(index)}
-                      className="text-gray-700 hover:text-gray-900"
-                    >
+                    <button onClick={() => moveUp(index)} className="text-gray-700 hover:text-gray-900">
                       <FaArrowUp size={18} />
                     </button>
-                    <button
-                      onClick={() => moveDown(index)}
-                      className="text-gray-700 hover:text-gray-900"
-                    >
+                    <button onClick={() => moveDown(index)} className="text-gray-700 hover:text-gray-900">
                       <FaArrowDown size={18} />
                     </button>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => openReplacePopup(index)}
-                      className="text-pink-500 hover:text-pink-700"
-                    >
+                    <button onClick={() => openReplacePopup(index)} className="text-pink-500 hover:text-pink-700">
                       <FaExchangeAlt size={18} />
                     </button>
-                    <button
-                      onClick={() => removeFromHeadlines(headline.article_id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
+                    <button onClick={() => removeFromHeadlines(headline.article_id)} className="text-red-500 hover:text-red-700">
                       <FaRegTrashAlt size={18} />
                     </button>
                   </div>
@@ -299,20 +245,33 @@ const HeadlinePage = () => {
         )}
       </div>
 
-      {/* Daftar Semua Artikel dengan Pagination */}
       <div className="border p-4 rounded-lg shadow-md bg-white">
-        <h2 className="text-xl font-bold mb-4">
-          📚 Pilih Berita - {selectedPortal?.platform_name || "Pilih Portal"}
-        </h2>
+        <h2 className="text-xl font-bold mb-4">📚 Pilih Berita Berdasarkan Regional</h2>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {regionalPortals.map((portal) => (
+            <button
+              key={portal.platform_id}
+              onClick={() => {
+                setFilterPlatformId(portal.platform_id);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-2 rounded-md border text-sm ${
+                filterPlatformId === portal.platform_id
+                  ? "bg-pink-600 text-white"
+                  : "bg-white text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              {portal.platform_desc}
+            </button>
+          ))}
+        </div>
+
         {isLoadingArticles ? (
           <p className="text-center text-gray-500">Loading artikel...</p>
         ) : (
           <>
-            <ArticleList
-              articles={sortedFilteredArticles}
-              onAdd={addToHeadlines}
-            />
-            {/* Pagination Controls */}
+            <ArticleList articles={sortedFilteredArticles} onAdd={addToHeadlines} />
             <div className="mt-4 flex justify-between items-center">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
@@ -321,9 +280,7 @@ const HeadlinePage = () => {
               >
                 Previous
               </button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
+              <span>Page {currentPage} of {totalPages}</span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -335,6 +292,7 @@ const HeadlinePage = () => {
           </>
         )}
       </div>
+
       <div className="mt-4">
         <button
           onClick={handleSaveHeadlines}
@@ -344,26 +302,28 @@ const HeadlinePage = () => {
         </button>
       </div>
 
-      {/* Popup Ganti Artikel */}
-      {/* ✅ Komponen Popup */}
       {isPopupOpen && (
-        <ArticlePopup
-          articles={sortedFilteredArticles}
-          meta={meta}
-          onClose={() => setIsPopupOpen(false)}
-          onSelect={replaceHeadline}
-          onPageChange={handlePageChange} // ✅ Trigger parent → Fetch data baru
-        />
-      )}
-
-{notification?.message && (
-  <NotifHeadEditor
-    message={notification.message}
-    type={notification.type}
-    onClose={() => setNotification(null)}
+  <ArticlePopup
+    articles={sortedFilteredArticles}
+    meta={meta}
+    onClose={() => setIsPopupOpen(false)}
+    onSelect={replaceHeadline}
+    onPageChange={handlePageChange}
+    // 🔥 Tambahkan props ini
+    regionalPortals={regionalPortals}
+    filterPlatformId={filterPlatformId}
+    setFilterPlatformId={setFilterPlatformId}
   />
 )}
 
+
+      {notification?.message && (
+        <NotifHeadEditor
+          message={notification.message}
+          type={notification.type}
+          onClose={handleCloseNotification}
+        />
+      )}
     </div>
   );
 };
